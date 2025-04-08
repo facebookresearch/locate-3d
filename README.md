@@ -11,5 +11,5 @@ Official codebase for the `Locate-3D` models, the `3D-JEPA` encoders, and the `L
 
 ## Method
 
-<img src="https://github.com/facebookresearch/locate-3d/assets/teaser_v013.png" width=100%>
+<img src="https://github.com/facebookresearch/locate-3d/blob/main/assets/teaser_v013.png" width=100%>
 
