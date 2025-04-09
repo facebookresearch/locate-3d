@@ -88,10 +88,10 @@ See the [LICENSE](./LICENSE) file for details about the license under which this
 If you find this repository useful in your research, please consider giving a star :star: and a citation
 <!-- TODO: Sergio add once arxiv link is created -->
 ```bibtex
-@article{bardes2024revisiting,
-  title={Revisiting Feature Prediction for Learning Visual Representations from Video},
-  author={Bardes, Adrien and Garrido, Quentin and Ponce, Jean and Rabbat, Michael, and LeCun, Yann and Assran, Mahmoud and Ballas, Nicolas},
+@article{arnaudmcvay2025locate3d,
+  title={Locate 3D: Real-World Object Localization via Self-Supervised Learning in 3D},
+  author={},
   journal={arXiv:2404.08471},
-  year={2024}
+  year={2025}
 }
   
