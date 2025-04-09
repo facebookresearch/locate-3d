@@ -75,10 +75,7 @@ This enables a systematic study of generalization capabilities as well as a stro
 │   ├── encoder               # model for creating the 3D-jepa encoder
     └── locate-3d             # model for creating the locate-3d class
 ├── locate3d_data             # folder containing the Locate 3d data
-│   ├── datasets              #   datasets, data loaders, ...
-└── configs                   # the only place where config files are allowed (specify experiment params for app/eval runs)
-    ├── evals                 #   configs for launching vjepa frozen evaluations
-    └── pretrain              #   configs for launching vjepa pretraining
+│   ├── datasets              # datasets, data loaders, ...
 
 ```
 
