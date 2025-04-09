@@ -25,14 +25,16 @@ deployment on robots and AR devices.
 
 <img src="https://github.com/facebookresearch/locate-3d/blob/main/assets/JEPA_v011.png" width=100%>
 
-Key to Locate 3D is 3D-JEPA, a novel self-supervised
-learning (SSL) algorithm applicable to sensor point clouds. It takes as input a 3D pointcloud
+3D-JEPA, a novel self-supervised
+learning (SSL) algorithm applicable to sensor point clouds, is key to `Locate 3D`. It takes as input a 3D pointcloud
 featurized using 2D foundation models (CLIP, DINO). Subsequently, masked prediction in latent space
 is employed as a pretext task to aid the self-supervised learning of contextualized pointcloud features.
 Once trained, the 3D-JEPA encoder is finetuned alongside a language-conditioned decoder to jointly
 predict 3D masks and bounding boxes. 
 
 ## Locate 3D Dataset
+
+<img src="https://github.com/facebookresearch/locate-3d/blob/main/assets/locate3d-data-vis.png" width=100%>
 
 <!-- TODO: Does ada want image to represent dataset? -->
 Additionally, we introduce Locate 3D Dataset, a new
