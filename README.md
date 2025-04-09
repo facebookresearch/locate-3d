@@ -90,7 +90,10 @@ If you find this repository useful in your research, please consider giving a st
 ```bibtex
 @article{arnaudmcvay2025locate3d,
   title={Locate 3D: Real-World Object Localization via Self-Supervised Learning in 3D},
-  author={},
+  author={Sergio Arnaud*, Paul McVay*, Ada Martin*, Arjun Majumdar, Krishna Murthy Jatavallabhula,
+Phillip Thomas, Ruslan Partsey, Daniel Dugas, Abha Gejji, Alexander Sax, Vincent-Pierre Berges,
+Mikael Henaff, Ayush Jain, Ang Cao, Ishita Prasad, Mrinal Kalakrishnan, Michael Rabbat, Nicolas
+Ballas, Mido Assran, Oleksandr Maksymets, Aravind Rajeswaran, Franziska Meier},
   journal={arXiv:2404.08471},
   year={2025}
 }
