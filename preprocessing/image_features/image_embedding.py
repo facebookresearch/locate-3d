@@ -8,7 +8,7 @@ from preprocessing.image_features.feature_image_generator_base import (
     AbstractFeatureImageGeneratorWithCache,
 )
 from preprocessing.image_features.image_feature_encoder import BaseImageFeatureEncoder
-from preprocessing.types import SemanticFeatureImage
+from preprocessing.type_utils import SemanticFeatureImage
 
 logger = logging.getLogger(__name__)
 

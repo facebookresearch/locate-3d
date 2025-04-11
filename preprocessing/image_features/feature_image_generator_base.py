@@ -5,7 +5,7 @@ from typing import Optional, Union
 
 import torch
 
-from preprocessing.types import SemanticFeatureImage
+from preprocessing.type_utils import SemanticFeatureImage
 
 logger = logging.getLogger(__name__)
 

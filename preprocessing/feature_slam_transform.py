@@ -8,7 +8,7 @@ from datasets.base_transform import BaseTransform
 from datasets.cached_dataset import CachedDataset
 from omegaconf import DictConfig, OmegaConf
 
-from preprocessing.types import Action, Observations, PointCloudData
+from preprocessing.type_utils import Action, Observations, PointCloudData
 from preprocessing.voxelized_pointcloud import VoxelizedPointcloud
 
 logger = logging.getLogger(__name__)

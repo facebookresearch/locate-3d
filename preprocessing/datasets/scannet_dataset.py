@@ -31,7 +31,7 @@ from preprocessing.datasets.scannet_constants import (
     SCANNET_DATASET_COLOR_MAPS,
 )
 from preprocessing.datasets.scanrefer_data import ScanReferDataConfig, load_scanrefer_data
-from preprocessing.types import TrainingSample
+from preprocessing.type_utils import TrainingSample
 
 logger = logging.getLogger(__name__)
 
