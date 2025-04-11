@@ -6,7 +6,7 @@ from omegaconf import OmegaConf
 
 from preprocessing.datasets.base_dataset import BaseDataset
 from preprocessing.datasets.base_transform import BaseTransform
-from preprocessing.types import Action, Observations, TrainingSample
+from preprocessing.type_utils import Action, Observations, TrainingSample
 
 logger = logging.getLogger(__name__)
 

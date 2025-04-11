@@ -7,7 +7,7 @@ from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 
 from preprocessing.image_features.feature_image_generator_base import AbstractFeatureImageGeneratorWithCache
 from preprocessing.image_features.image_text_encoder import BaseImageTextEncoder
-from preprocessing.types import SemanticFeatureImage
+from preprocessing.type_utils import SemanticFeatureImage
 
 logger = logging.getLogger(__name__)
 

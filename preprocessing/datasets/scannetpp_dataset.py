@@ -13,7 +13,7 @@ from torchvision.transforms import Compose, InterpolationMode, PILToTensor, Resi
 from tqdm import tqdm
 
 from preprocessing.datasets.base_dataset import BaseDataset
-from preprocessing.types import CameraViewsData, Observations, TrainingSample
+from preprocessing.type_utils import CameraViewsData, Observations, TrainingSample
 
 INVALID_DEPTH_REPLACEMENT_VALUE = 0.0
 IPHONE_SHAPE = (1440, 1920)

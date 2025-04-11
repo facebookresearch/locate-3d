@@ -9,7 +9,7 @@ from omegaconf import DictConfig, OmegaConf
 
 from preprocessing.cached_dataset import CachedDataset
 from preprocessing.datasets.base_transform import BaseTransform
-from preprocessing.types import (
+from preprocessing.type_utils import (
     Action,
     BoundingBoxes3D,
     CameraViewsData,

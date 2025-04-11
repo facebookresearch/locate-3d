@@ -22,7 +22,7 @@ from preprocessing.datasets.pose_utils import (
     six_dim_pose_to_transform,
 )
 from preprocessing.datasets.posed_rgbd_dataset import PosedRGBDDataset
-from preprocessing.types import Observations, TrainingSample
+from preprocessing.type_utils import Observations, TrainingSample
 
 logger = logging.getLogger(__name__)
 
