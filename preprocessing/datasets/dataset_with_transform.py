@@ -2,11 +2,11 @@ import logging
 from typing import List, Optional
 
 import numpy as np
-from base_dataset import BaseDataset
-from base_transform import BaseTransform
 from omegaconf import OmegaConf
 
-from ..types import Action, Observations, TrainingSample
+from preprocessing.datasets.base_dataset import BaseDataset
+from preprocessing.datasets.base_transform import BaseTransform
+from preprocessing.types import Action, Observations, TrainingSample
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from omegaconf import OmegaConf
 
-from ..types import Action, Observations, TrainingSample
+from preprocessing.types import Action, Observations, TrainingSample
 
 logger = logging.getLogger(__name__)
 

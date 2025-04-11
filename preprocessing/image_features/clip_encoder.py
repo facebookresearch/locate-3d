@@ -3,8 +3,9 @@ from typing import List, Optional, Union
 import clip
 import numpy as np
 import torch
-from image_text_encoder import BaseImageTextEncoder
 from PIL import Image
+
+from preprocessing.image_features.image_text_encoder import BaseImageTextEncoder
 
 
 class ClipEncoder(BaseImageTextEncoder):

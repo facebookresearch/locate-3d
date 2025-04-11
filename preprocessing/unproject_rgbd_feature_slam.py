@@ -10,8 +10,9 @@ import logging
 from typing import List, Optional
 
 import torch
-from image_features.image.mask_embedding import FeatureImageGenerator
-from voxelized_pointcloud import VoxelizedPointcloud
+
+from preprocessing.image_features.mask_embedding import FeatureImageGenerator
+from preprocessing.voxelized_pointcloud import VoxelizedPointcloud
 
 logger = logging.getLogger(__name__)
 

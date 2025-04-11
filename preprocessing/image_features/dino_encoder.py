@@ -2,8 +2,9 @@ from typing import Optional
 
 import numpy as np
 import torch
-from image_feature_encoder import BaseImageFeatureEncoder
-from image_feature_utils import padding_to_patch
+
+from preprocessing.image_features.image_feature_encoder import BaseImageFeatureEncoder
+from preprocessing.image_features.image_feature_utils import padding_to_patch
 
 
 class DINOV2Encoder(BaseImageFeatureEncoder):

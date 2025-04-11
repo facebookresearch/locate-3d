@@ -8,12 +8,12 @@ from typing import Union
 
 import numpy as np
 import torch
-from base_dataset import BaseDataset
 from PIL import Image
 from torchvision.transforms import Compose, InterpolationMode, PILToTensor, Resize
 from tqdm import tqdm
 
-from ..types import CameraViewsData, Observations, TrainingSample
+from preprocessing.datasets.base_dataset import BaseDataset
+from preprocessing.types import CameraViewsData, Observations, TrainingSample
 
 INVALID_DEPTH_REPLACEMENT_VALUE = 0.0
 IPHONE_SHAPE = (1440, 1920)
@@ -200,7 +200,7 @@ class ScannetPPDataset(BaseDataset):
         if splits != None:
             split = splits
         self.dataset_path = Path(dataset_path)
-        self.cache_path = Path(cache_path)
+        self.cache_path = cache_path
         self.image_scale = image_scale
         new_shape = (
             round(IPHONE_SHAPE[0] * image_scale),

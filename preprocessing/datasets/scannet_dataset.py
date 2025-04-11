@@ -16,22 +16,22 @@ from typing import List, Optional, Tuple, Union
 import numpy as np
 import pandas as pd
 import torch
-from base_dataset import BaseDataset
 from natsort import natsorted
 from PIL import Image
-from posed_rgbd_dataset import PosedRGBDDataset, make_lookup_table
-from referit3d_data import ReferIt3dDataConfig, load_referit3d_data
-from scannet_constants import (
+from torch import Tensor
+from torch_scatter import scatter_mean
+
+from preprocessing.datasets.base_dataset import BaseDataset
+from preprocessing.datasets.posed_rgbd_dataset import PosedRGBDDataset, make_lookup_table
+from preprocessing.datasets.referit3d_data import ReferIt3dDataConfig, load_referit3d_data
+from preprocessing.datasets.scannet_constants import (
     MAX_CLASS_IDX,
     SCANNET_DATASET_CLASS_IDS,
     SCANNET_DATASET_CLASS_LABELS,
     SCANNET_DATASET_COLOR_MAPS,
 )
-from scanrefer_data import ScanReferDataConfig, load_scanrefer_data
-from torch import Tensor
-from torch_scatter import scatter_mean
-
-from ..types import TrainingSample
+from preprocessing.datasets.scanrefer_data import ScanReferDataConfig, load_scanrefer_data
+from preprocessing.types import TrainingSample
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,18 @@ GTPtcData = namedtuple(
         "segment_centers",
     ],
 )
+
+
+class ScanNetModalities(Enum):
+    RGB = auto()
+    DEPTH = auto()
+    POSE = auto()
+    INTRINSICS = auto()
+    INSTANCE_2D = auto()
+    BBOX_3D = auto()
+    GT_PTC = auto()
+    ALL = auto()
+    # BBOX_3D = auto()
 
 
 class ScanNetDataset(PosedRGBDDataset):
@@ -541,18 +553,6 @@ def align_to_axes(align_matrix: Tensor, point_cloud: Tensor):
         [point_cloud, torch.ones_like(point_cloud[..., :1])], dim=-1
     )
     return torch.matmul(point_cloud, align_matrix.T)[..., :3]
-
-
-class ScanNetModalities(Enum):
-    RGB = auto()
-    DEPTH = auto()
-    POSE = auto()
-    INTRINSICS = auto()
-    INSTANCE_2D = auto()
-    BBOX_3D = auto()
-    GT_PTC = auto()
-    ALL = auto()
-    # BBOX_3D = auto()
 
 
 class ScanNetTrainingSampleDataset(ScanNetDataset, BaseDataset):

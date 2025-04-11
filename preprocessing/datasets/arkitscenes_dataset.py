@@ -13,16 +13,16 @@ from typing import List, Tuple, Union
 import numpy as np
 import pandas as pd
 import torch
-from base_dataset import BaseDataset
 from natsort import natsorted
-from pose_utils import (
+
+from preprocessing.datasets.base_dataset import BaseDataset
+from preprocessing.datasets.pose_utils import (
     infer_sky_direction_from_poses,
     interpolate_camera_poses,
     six_dim_pose_to_transform,
 )
-from posed_rgbd_dataset import PosedRGBDDataset
-
-from ..types import Observations, TrainingSample
+from preprocessing.datasets.posed_rgbd_dataset import PosedRGBDDataset
+from preprocessing.types import Observations, TrainingSample
 
 logger = logging.getLogger(__name__)
 

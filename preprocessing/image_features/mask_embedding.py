@@ -3,11 +3,11 @@ from typing import List, Optional
 
 import numpy as np
 import torch
-from feature_image_generator_base import AbstractFeatureImageGeneratorWithCache
-from image_text_encoder import BaseImageTextEncoder
 from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 
-from ..types import SemanticFeatureImage
+from preprocessing.image_features.feature_image_generator_base import AbstractFeatureImageGeneratorWithCache
+from preprocessing.image_features.image_text_encoder import BaseImageTextEncoder
+from preprocessing.types import SemanticFeatureImage
 
 logger = logging.getLogger(__name__)
 

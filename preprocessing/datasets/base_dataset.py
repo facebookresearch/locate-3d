@@ -1,6 +1,6 @@
 import torch
 
-from ..types import TrainingSample
+from preprocessing.types import TrainingSample
 
 
 class BaseDataset(torch.utils.data.Dataset):

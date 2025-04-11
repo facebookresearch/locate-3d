@@ -7,9 +7,9 @@ import torch
 from datasets.base_transform import BaseTransform
 from datasets.cached_dataset import CachedDataset
 from omegaconf import DictConfig, OmegaConf
-from voxelized_pointcloud import VoxelizedPointcloud
 
-from ..types import Action, Observations, PointCloudData
+from preprocessing.types import Action, Observations, PointCloudData
+from preprocessing.voxelized_pointcloud import VoxelizedPointcloud
 
 logger = logging.getLogger(__name__)
 MAX_OBJ_NAME_LEN = 77

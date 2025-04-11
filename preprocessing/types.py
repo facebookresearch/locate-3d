@@ -9,8 +9,6 @@ import torchvision.transforms.functional as F
 from PIL import Image
 from torch import Tensor
 
-from cortex.utils.pose.pose_utils import get_rotation_matrix_z
-
 
 def get_rotation_matrix_z(k: int):
     """
@@ -252,6 +250,11 @@ class BoundingBoxes3D:
 
 
 @dataclass
+class Action:
+    action: str = None
+    bounding_box: BoundingBoxes3D = None
+
+@dataclass
 class CameraViewsData:
     rgb: Optional[Tensor] = None  # B, C, H, W values in [0,1]
     depth_zbuffer: Optional[Tensor] = None  # [B, H, W] Metric
@@ -449,4 +452,46 @@ class Observations:
             "features": self.pointcloud.features_reduced,
             "rgb": self.pointcloud.rgb_reduced,
             "scene_id": self.frame_history.scene_id,
+        }
+
+
+@dataclass
+class TrainingSample:
+    question_id: Optional[str] = None
+    goal: Optional[str] = None
+    target_masks: Optional[List[int]] = None
+    target_points: Optional[Tensor] = None  # [N x 3]
+    observations: Optional[Observations] = None
+    action: Optional[Action] = None
+    info: Optional[Dict[str, Any]] = None
+
+    def visualize_plotly(self):
+        """Convenience function for visualizing the sample when debugging.
+        Exports the plotly html visualization to a file, which can be fetched from the host and displayed.
+        """
+        from cortex.train.vis import visualize_training_sample, write_fig_to_viz_show
+
+        print("Visualizing TrainingSample")
+        fig = visualize_training_sample(self)
+        write_fig_to_viz_show(fig)
+        return fig
+    
+    @classmethod
+    def from_dict(cls, pointcloud_dict: Dict[str, Any]):
+        return cls(
+            observations = Observations(
+                pointcloud = PointCloudData(
+                    points_reduced = pointcloud_dict["points"],
+                    features_reduced = pointcloud_dict["features"],
+                    rgb_reduced = pointcloud_dict["rgb"]
+                )
+            )
+        )
+
+    def to_dict(self):
+        return {
+            "points": self.observations.pointcloud.points_reduced,
+            "features": self.observations.pointcloud.features_reduced,
+            "rgb": self.observations.pointcloud.rgb_reduced,
+            "scene_id": self.observations.frame_history.scene_id,
         }

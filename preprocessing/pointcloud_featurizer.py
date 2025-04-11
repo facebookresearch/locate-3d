@@ -1,7 +1,15 @@
 import logging
 import os
 import re
-from types import (
+from typing import Any, Dict, List, Optional
+
+import hydra
+import torch
+from omegaconf import DictConfig, OmegaConf
+
+from preprocessing.cached_dataset import CachedDataset
+from preprocessing.datasets.base_transform import BaseTransform
+from preprocessing.types import (
     Action,
     BoundingBoxes3D,
     CameraViewsData,
@@ -9,14 +17,7 @@ from types import (
     PointCloudData,
     TrainingSample,
 )
-from typing import Any, Dict, Optional
-
-import hydra
-import torch
-from cached_dataset import CachedDataset
-from datasets.base_dataset import BaseTransform
-from omegaconf import DictConfig, OmegaConf
-from voxelized_pointcloud import VoxelizedPointcloud
+from preprocessing.voxelized_pointcloud import VoxelizedPointcloud
 
 logger = logging.getLogger(__name__)
 MAX_OBJ_NAME_LEN = 77
@@ -231,20 +232,9 @@ class FeatureLifter3DTransform(LearnedLocalizerEncoder):
         self.batch_size = self.cfg.get("unproject_frame_batch_size", 1)
         self.voxelized_pointcloud_kwargs = self.cfg.get("voxelized_pointcloud", {})
 
-        self.use_cpp = self.cfg.get("use_cpp", True)
         self.use_cache_frame_history = self.cfg.get("use_cache_frame_history", False)
         self.do_not_use_cache = self.cfg.get("do_not_use_cache", False)
         self.cache_path = self.cfg.get("cache_path", None)
-
-        skip_fields = ["frame_history"]
-        if self.use_cache_frame_history:
-            assert (
-                not self.use_cpp
-            ), "CPP loading does not currently support loading frame history"
-            assert (
-                self.cfg.keep_frame_history
-            ), "Conflicting configs. Use_cache_frame_history is True but keep_frame_history is False"
-            skip_fields = []
 
         cache_path = self.cfg.get("cache_path")
         if os.path.exists(cache_path) and not self.do_not_use_cache:
@@ -257,8 +247,6 @@ class FeatureLifter3DTransform(LearnedLocalizerEncoder):
         self.cached_datasets = [
             CachedDataset(
                 key=k,
-                skip_fields=skip_fields,
-                use_cpp=self.use_cpp,
                 cache_path=cache_path,
             )
             for k in self.cfg.get("cache_keys", default_cache_keys)

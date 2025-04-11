@@ -3,8 +3,9 @@ from typing import Optional
 
 import numpy as np
 import torch
-from image_feature_encoder import BaseImageFeatureEncoder
 from segment_anything import SamPredictor, sam_model_registry
+
+from preprocessing.image_features.image_feature_encoder import BaseImageFeatureEncoder
 
 
 class SAMEncoder(BaseImageFeatureEncoder):

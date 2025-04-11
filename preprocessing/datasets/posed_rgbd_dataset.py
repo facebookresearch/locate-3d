@@ -21,7 +21,7 @@ from torch import Tensor
 from torchvision.transforms import functional as F
 from tqdm import tqdm
 
-from ..types import CameraViewsData, Observations
+from preprocessing.types import CameraViewsData, Observations
 
 logger = logging.getLogger(__name__)
 

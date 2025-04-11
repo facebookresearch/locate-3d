@@ -3,13 +3,14 @@ import json
 import logging
 import os
 from pathlib import Path
-from types import Observations, TrainingSample
 from typing import Optional
 
 import filelock
 import numpy as np
 import torch
 from filelock import FileLock
+
+from preprocessing.types import Observations, TrainingSample
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +27,7 @@ class CachedDataset:
         self.cache_path = cache_path + "/" + key
         assert os.path.exists(self.cache_path), f"{self.cache_path} does not exist."
         self._chown_group_id = os.stat(cache_path).st_gid
-        self.obs_files_path = glob.glob(f"{self.cache_path}/*.obs")
-        self.pt_files_path = glob.glob(f"{self.cache_path}/*.pt")
-        self.files_path = self.obs_files_path + self.pt_files_path
+        self.files_path = glob.glob(f"{self.cache_path}/*.pt")
 
         logger.info(
             f"Loaded the CachedDataset at path {self.cache_path} with {len(self.files_path)} samples"
