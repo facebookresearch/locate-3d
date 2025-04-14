@@ -7,9 +7,6 @@ import os
 import sys
 # Path to the directory in which this script is located
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-# By default, we run from the `accel-cortex` directory
-PREPROCESSING_PATH = os.path.join(SCRIPT_DIR, "..")
-sys.path.append(PREPROCESSING_PATH)
 
 import torch
 from omegaconf import OmegaConf
@@ -27,15 +24,7 @@ def main(args, start_idx, end_idx):
 
     cache_path = args.cache_path
 
-    datasets = ScannetPPDataset(
-        dataset_path=args.dataset_path,
-        cache_path=cache_path,
-        frame_skip=30,
-        split=("val"),
-        frame_chunk_size=11,
-    )
-    dataset = DatasetWithTransform([datasets])
-    print(f"Dataset length: {len(dataset)}")
+    l3ddd = Locate3DDataset(annotations_fpath = 'locate3d_data/dataset/train_scannet.json', scannet_data_dir = '/fsx-cortex/shared/datasets/scannet_ac')
 
     pointcloud_featurizer_clip_cfg = OmegaConf.load("config/clip.yaml")
     pointcloud_featurizer_clip = FeatureLifter3DTransform(pointcloud_featurizer_clip_cfg)

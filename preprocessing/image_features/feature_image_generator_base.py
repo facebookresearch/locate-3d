@@ -24,12 +24,6 @@ class AbstractFeatureImageGeneratorWithCache:
         if device is None:
             device = "cuda" if torch.cuda.is_available() else "cpu"
         self.device = device
-        self.cache_path = cache_path
-
-        if os.path.exists(cache_path):
-            self._chown_group_id = os.stat(cache_path).st_gid
-        else:
-            self._chown_group_id = None
 
         self.feat_dim = None
 

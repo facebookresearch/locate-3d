@@ -1,15 +1,32 @@
 from preprocessing.datasets.scannet_dataset import ScanNetDataset
 from locate3d_data.scannet_dataset import ScanNetDataset as ScanNetDatasetL3DD
+from locate3d_data.locate3d_dataset import Locate3DDataset
 
 dataset = ScanNetDataset(root_dir = '/fsx-cortex/shared/datasets/scannet_ac', split = 'val', frame_skip = 30, n_classes = 549)
 
 d1 = dataset[0]
 
-l3dd = ScanNetDatasetL3DD('/fsx-cortex/shared/datasets/scannet_ac')
+l3ddscannet = ScanNetDatasetL3DD('/fsx-cortex/shared/datasets/scannet_ac')
 
-d2 = l3dd.get_camera_views('scene0011_00')
+d2 = l3ddscannet.get_camera_views('scene0011_00')
 
 # TODO: correct except for the sky rotations
 
+l3ddd = Locate3DDataset(annotations_fpath = 'locate3d_data/dataset/train_scannet.json', scannet_data_dir = '/fsx-cortex/shared/datasets/scannet_ac')
+a = l3ddd.list_scenes()
 
+cv = l3ddd.get_camera_views(*a[0])
+
+# TODO: how to chunk?
+
+from preprocessing.pointcloud_featurizer import FeatureLifter3D
+from omegaconf import OmegaConf
+
+pointcloud_featurizer_clip_cfg = OmegaConf.load("preprocessing/config/clip.yaml")
+pointcloud_featurizer_clip = FeatureLifter3D(pointcloud_featurizer_clip_cfg)
+
+# TODO: sam weigths path and download instructions
+ptc = pointcloud_featurizer_clip.lift_frames(cv)
+
+# TODO: do we want frame cache?
 breakpoint()

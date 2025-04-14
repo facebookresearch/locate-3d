@@ -13,7 +13,7 @@ feature_slam:
       _target_: segment_anything.SamAutomaticMaskGenerator
       model:
         _target_: preprocessing.image_features.mask_embedding.get_sam_model
-        model_path: "/home/kmj/code/accel-cortex/weights/sam_vit_h_4b8939.pth"
+        model_path: "preprocessing/weights/sam_vit_h_4b8939.pth"
         version: "vit_h"
         device: cuda
       points_per_side: 32
@@ -25,18 +25,7 @@ feature_slam:
       version: "ViT-L/14"
       device: cuda
     device: cuda
-    # Where to store the image features
-    cache_path: "/fsx-cortex-datacache/shared/cache/cached_frames/SAM-vit_h-CLIP-ViT-L_14"
   device: cuda
 
 
-# This determines where the pointclouds go
-cache_path: "/fsx-cortex/kmj/debug/locate3d/preprocessing-release"
-store_data_for_process_action: True
-keep_frame_history: False
-batch_size: 1
-
-learned_location_predictor: False
-
-skip_process_action: False
-classpath: pretrain.pointcloud_featurizer.FeatureLifter3DTransform
+unproject_frame_batch_size: 1

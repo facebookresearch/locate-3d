@@ -10,11 +10,11 @@ from locate3d_data.arkitscenes_dataset import ARKitScenesDataset
 class Locate3DDataset:
     def __init__(
         self,
-        annotations_fpath : str,
-        scannet_align_matrix_path: str,
-        scannet_data_dir: str,
-        scannetpp_data_dir: str,
-        arkitscenes_data_dir: str,
+        annotations_fpath : str, # TODO: combine one full train and val jsons
+        scannet_align_matrix_path: str = None, # TODO: shouldn't this be automatic in directory
+        scannet_data_dir: str = None, # TODO: doesn't make sense to need to specify this if loading arkit json
+        scannetpp_data_dir : str = None,
+        arkitscenes_data_dir: str = None,
     ):
         super().__init__()
         
@@ -167,6 +167,15 @@ class Locate3DDataset:
         xyz, rgb = self.arkitscenes_dataset.get_scan(scene_name)
         return {"xyz": xyz, "rgb": rgb}
 
+    @staticmethod
+    def get_scene_dataset_from_annotation(anno):
+        if "scene_dataset" in anno:
+            scene_dataset = anno['scene_dataset']
+            assert scene_dataset in ['ScanNet', 'ScanNet++', 'ARKitScenes'], "Unknown scene dataset"
+        else:
+            scene_dataset = 'ScanNet' # For compatibility with ScanEnts-ScanRefer
+
+        return scene_dataset
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         """
@@ -175,11 +184,8 @@ class Locate3DDataset:
         # Get the scene name
         anno = self.annos[idx]
         scene_name = anno["scene_id"]
-        if "scene_dataset" in anno:
-            scene_dataset = anno['scene_dataset']
-            assert scene_dataset in ['ScanNet', 'ScanNet++', 'ARKitScenes'], "Unknown scene dataset"
-        else:
-            scene_dataset = 'ScanNet' # For compatibility with ScanEnts-ScanRefer
+        scene_dataset = Locate3DDataset.get_scene_dataset_from_annotation(anno)
+            
         if scene_dataset == 'ScanNet':
             scene_data = self.load_scannet_scene_data(scene_name)
         elif scene_dataset == 'ScanNet++':
@@ -197,3 +203,27 @@ class Locate3DDataset:
     def __len__(self):
         """Return number of utterances."""
         return len(self.annos)
+
+    def get_camera_views(self, scene_dataset, scene_name):
+        dataset = None
+        if scene_dataset == 'ScanNet':
+            dataset = self.scannet_dataset
+        elif scene_dataset == 'ScanNet++':
+            dataset = self.scannetpp_dataset
+        elif scene_dataset == 'ARKitScenes':
+            dataset = self.arkitscenes_dataset
+
+
+        return dataset.get_camera_views(scene_name)
+    
+    def list_scenes(self):
+        scenes = set()
+
+        for anno in self.annos:
+            scene_name = anno["scene_id"]
+            scene_dataset = Locate3DDataset.get_scene_dataset_from_annotation(anno)
+            key = (scene_dataset, scene_name)
+
+            scenes.add(key)
+
+        return list(scenes)

@@ -27,7 +27,7 @@ class ScanNetDataset:
         self.instance_dir = self.dataset_path / "scannet_instance_data"
 
     def get_scan(self, scene_id):
-        scan_folder = self.dataset_path + "/scans"
+        scan_folder = self.dataset_path / "scans"
 
         # Most of this logic is to deal with the fact that the .ply file does not directly contain the semantic segment as an argument
         # So we instead have to load the superpoints (non-semantic oversegmentation of scene), then load the map from superpoint to semantic segment
