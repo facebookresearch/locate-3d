@@ -5,10 +5,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-from preprocessing.image_features.image_text_encoder import BaseImageTextEncoder
-
-
-class ClipEncoder(BaseImageTextEncoder):
+class ClipEncoder:
     """Simple wrapper for encoding different things as text."""
 
     def __init__(self, version="ViT-B/32", device: Optional[str] = None):

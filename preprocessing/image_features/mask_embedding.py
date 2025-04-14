@@ -5,10 +5,6 @@ import numpy as np
 import torch
 from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 
-from preprocessing.image_features.feature_image_generator_base import AbstractFeatureImageGeneratorWithCache
-from preprocessing.image_features.image_text_encoder import BaseImageTextEncoder
-from preprocessing.type_utils import SemanticFeatureImage
-
 logger = logging.getLogger(__name__)
 
 
@@ -29,25 +25,28 @@ def get_sam_model(model_path: str, device: str, version="vit_t"):
     return model
 
 
-class MaskEmbeddingFeatureImageGenerator(AbstractFeatureImageGeneratorWithCache):
+class MaskEmbeddingFeatureImageGenerator:
     NO_MASK_IDX = -1
 
     def __init__(
         self,
         mask_generator: SamAutomaticMaskGenerator,
-        image_text_encoder: BaseImageTextEncoder = None,
+        image_text_encoder = None,
         device: Optional[str] = None,
-        cache_path: str = None,
     ) -> None:
         """
         Turns an image into pixel-aligned features
         Uses MaskCLIP
          - generate_features() : takes an image and returns a feature image using various masks and the provided 2D encoder
         """
-        super().__init__(device=device, cache_path=cache_path)
+
         self.mask_generator = mask_generator
         self.image_text_encoder = image_text_encoder
         self.cosine_similarity = torch.nn.CosineSimilarity(dim=-1)
+        if device is None:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = device
+        self.feat_dim = None
 
     @property
     def image_encoder_name(self):
@@ -89,8 +88,6 @@ class MaskEmbeddingFeatureImageGenerator(AbstractFeatureImageGeneratorWithCache)
         img: np.ndarray,
         masks: List[dict],
         global_feat: torch.Tensor,
-        cache_key: Optional[str] = None,
-        compressed: bool = False,
     ) -> torch.Tensor:
         """
         Generate concept fusion features.
@@ -116,18 +113,6 @@ class MaskEmbeddingFeatureImageGenerator(AbstractFeatureImageGeneratorWithCache)
             device=self.device,
         )
         if len(masks) == 0:
-            segments = (
-                torch.ones(load_image_height, load_image_width, dtype=torch.int32)
-                * self.NO_MASK_IDX
-            )
-            cat_features = torch.zeros(0, self.feat_dim)
-
-            cache_data = SemanticFeatureImage.from_tensor(
-                segments, cat_features, no_mask_id=self.NO_MASK_IDX
-            )
-            self.to_cache(cache_key, cache_data)
-            if compressed:
-                return cache_data
             return outfeat
 
         for mask in masks:
@@ -188,14 +173,7 @@ class MaskEmbeddingFeatureImageGenerator(AbstractFeatureImageGeneratorWithCache)
                 segments[
                     roi_nonzero_inds[maskidx][:, 0], roi_nonzero_inds[maskidx][:, 1]
                 ] = maskidx
-            cat_features = torch.cat(features, dim=0)
-            cache_data = SemanticFeatureImage.from_tensor(
-                segments, cat_features, no_mask_id=self.NO_MASK_IDX
-            )
-            self.to_cache(cache_key, cache_data)
 
-        if compressed:
-            return cache_data
         outfeat = outfeat.unsqueeze(
             0
         ).float()  # interpolate is not implemented for float yet in pytorch
@@ -211,9 +189,6 @@ class MaskEmbeddingFeatureImageGenerator(AbstractFeatureImageGeneratorWithCache)
     def generate_features(
         self,
         image: torch.Tensor,
-        frame_path: Optional[int] = None,
-        compressed: bool = False,
-        resize_cache_to_image_shape: bool = False,
     ):
         """
         Takes a float image as input, extracts masks, computes the 2D encoder features on the masks
@@ -221,33 +196,7 @@ class MaskEmbeddingFeatureImageGenerator(AbstractFeatureImageGeneratorWithCache)
         """
         if self.image_text_encoder is None:
             return None
-        cache_key = frame_path
-        try:
-            assert len(image.shape) == 3 and image.shape[-1] in [1, 3, 4], image.shape
-            cache_data = self.from_cache(cache_key)
-        except EOFError as e:
-            logger.error(
-                f"This cache is corrupted, please maunally delete :{self.cache_path}/{self.image_encoder_name}/{cache_key}.pth"
-            )
-            raise e
 
-        if cache_data is None:
-            logger.info(f"cache miss: {cache_key} in {self.cache_path}")
-
-        if cache_data is not None:
-            if resize_cache_to_image_shape:
-                cache_data.resize(
-                    (image.shape[1], image.shape[0])
-                )  # PIL W x H format, but Torch uses H x W: https://pillow.readthedocs.io/en/stable/reference/Image.html#PIL.Image.Image.resize
-            else:
-                if cache_data.semantic_mask.size != image.size:
-                    logger.error(
-                        f"not resizing and cache data shape {cache_data.semantic_mask.size} does not match image shape {image.size}"
-                    )
-                    # cache_data = None
-            if compressed:
-                return cache_data
-            return self._cache_data_to_mask_features(cache_data)
         uint_img = (image.cpu().numpy() * 255).astype(np.uint8)
         masks = self.generate_mask(uint_img)
 
@@ -256,7 +205,7 @@ class MaskEmbeddingFeatureImageGenerator(AbstractFeatureImageGeneratorWithCache)
 
         # CLIP features per ROI
         outfeat = self.generate_local_features(
-            uint_img, masks, global_feat, cache_key, compressed
+            uint_img, masks, global_feat
         )
         return outfeat
-        # return self.generate_mask_features(image, scene_id=scene_id, frame_number=frame_number)
+

@@ -14,8 +14,6 @@ feature_slam:
       version: "base"
       device: cuda
     device: cuda
-    # Where to store the image features
-    cache_path: "/fsx-cortex-datacache/shared/cache/cached_frames/dinov2-base"
   device: cuda
 
 

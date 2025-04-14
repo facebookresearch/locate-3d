@@ -139,8 +139,7 @@ class UnprojectRGBDFeatureSLAM:
         depth: torch.Tensor,
         pose: torch.Tensor,
         intrinsic: torch.Tensor,
-        features: Optional[torch.Tensor] = None,
-        frame_path: Optional[List[str]] = None,
+        features: Optional[torch.Tensor] = None
     ):
         """
         image : (batch x color x width x height)
@@ -154,9 +153,6 @@ class UnprojectRGBDFeatureSLAM:
         rgb = image.permute(0, 2, 3, 1).to(self.device)
         depth = depth.unsqueeze(dim=3).permute(0, 3, 1, 2).to(self.device)
 
-        if frame_path is None:
-            frame_path = [None] * len(rgb)
-
         camera_pose = pose.float().to(self.device)
 
         if features is None and self.image_feature_generator is not None:
@@ -164,7 +160,7 @@ class UnprojectRGBDFeatureSLAM:
             for i in range(rgb.shape[0]):
                 features.append(
                     self.image_feature_generator.generate_features(
-                        rgb[i], frame_path[i]
+                        rgb[i]
                     )
                 )
             features = torch.cat(features, dim=0)

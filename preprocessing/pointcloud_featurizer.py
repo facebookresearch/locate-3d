@@ -30,14 +30,11 @@ class FeatureLifter3D:
         self.batch_size = cfg.get("unproject_frame_batch_size", 1)
         self.voxelized_pointcloud_kwargs = cfg.get("voxelized_pointcloud", {})
 
-        if isinstance(cfg.feature_slam, DictConfig):
-            logger.info("instantiating feature slam", cfg.feature_slam)
-            self.feature_slam = hydra.utils.instantiate(cfg.feature_slam)
-            logger.info(
-                f"Feature generator: {self.feature_slam.image_feature_generator}"
-            )
-        else:
-            self.feature_slam = cfg.feature_slam
+        logger.info("instantiating feature slam", cfg.feature_slam)
+        self.feature_slam = hydra.utils.instantiate(cfg.feature_slam)
+        logger.info(
+            f"Feature generator: {self.feature_slam.image_feature_generator}"
+        )
 
     def lift_frames(
         self, camera_views: Dict
