@@ -22,6 +22,12 @@ cv = l3ddd.get_camera_views(*a[0])
 from preprocessing.pointcloud_featurizer import FeatureLifter3D
 from omegaconf import OmegaConf
 
+pointcloud_featurizer_dino_cfg = OmegaConf.load("preprocessing/config/dino.yaml")
+pointcloud_featurizer_dino = FeatureLifter3D(pointcloud_featurizer_dino_cfg)
+
+ptc = pointcloud_featurizer_dino.lift_frames(cv)
+
+breakpoint()
 pointcloud_featurizer_clip_cfg = OmegaConf.load("preprocessing/config/clip.yaml")
 pointcloud_featurizer_clip = FeatureLifter3D(pointcloud_featurizer_clip_cfg)
 

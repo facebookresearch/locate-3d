@@ -12,31 +12,26 @@ import torch
 from omegaconf import OmegaConf
 from pytorch3d.ops import knn_points
 
-from preprocessing.cached_dataset import CachedDataset
-from preprocessing.datasets.scannet_dataset import ScanNetDataset
-from preprocessing.datasets.arkitscenes_dataset import ARKitScenesDataset
-from preprocessing.datasets.scannetpp_dataset import ScannetPPDataset
-from preprocessing.pointcloud_featurizer import FeatureLifter3DTransform
-from preprocessing.datasets.dataset_with_transform import DatasetWithTransform
-
+from preprocessing.pointcloud_featurizer import FeatureLifter3D
+from locate3d_data.locate3d_dataset import Locate3DDataset
 
 def main(args, start_idx, end_idx):
 
     cache_path = args.cache_path
 
-    l3ddd = Locate3DDataset(annotations_fpath = 'locate3d_data/dataset/train_scannet.json', scannet_data_dir = '/fsx-cortex/shared/datasets/scannet_ac')
-
+    l3dd = Locate3DDataset(annotations_fpath = 'locate3d_data/dataset/train_scannet.json', scannet_data_dir = '/fsx-cortex/shared/datasets/scannet_ac')
+    scene_list = l3dd.list_scenes().sorted()
+    
     pointcloud_featurizer_clip_cfg = OmegaConf.load("config/clip.yaml")
-    pointcloud_featurizer_clip = FeatureLifter3DTransform(pointcloud_featurizer_clip_cfg)
+    pointcloud_featurizer_clip = FeatureLifter3D(pointcloud_featurizer_clip_cfg)
     pointcloud_featurizer_dino_cfg = OmegaConf.load("config/dino.yaml")
-    pointcloud_featurizer_dino = FeatureLifter3DTransform(pointcloud_featurizer_dino_cfg)
+    pointcloud_featurizer_dino = FeatureLifter3D(pointcloud_featurizer_dino_cfg)
 
     # Iterate through the dataset and cache the featurized pointclouds
     for idx in range(start_idx, end_idx):
         # Load a sample from the dataset
-        sample = dataset[idx]
-        obs = sample.observations
-        scene_id = obs.frame_history.scene_id
+        scene_id = scene_list[idx][1]
+        camera_views = l3ddd.get_camera_views(*scene_list[idx])
         
         # Early skip if the scene is already cached
         cache_file = os.path.join(cache_path, f"{scene_id}.pt")
@@ -46,20 +41,8 @@ def main(args, start_idx, end_idx):
             continue
         
         # Build CLIP featurized pointcloud
-        obs.frame_history.view_id = [None for _ in obs.frame_history.view_id]
-        torch.manual_seed(0)
-        obs_clip, _ = pointcloud_featurizer_clip._transform_observations(obs)
-
-        # Re-load the training sample (quirk of how the dataset is structured;
-        # without reloading, the below code will not work)
-        sample = dataset[idx]
-        obs = sample.observations
-        scene_id = obs.frame_history.scene_id
-
-        # Build DINO featurized pointcloud
-        obs.frame_history.view_id = [None for _ in obs.frame_history.view_id]
-        torch.manual_seed(0)
-        obs_dino, _ = pointcloud_featurizer_dino._transform_observations(obs)
+        clip_ptc = pointcloud_featurizer_clip.lift_frames(camera_views)
+        dino_ptc = pointcloud_featurizer_dino.lift_frames(camera_views)
 
         # Aligning CLIP and DINO features
         _knn = knn_points(obs_dino.pointcloud.points_reduced[None, ...].cuda(), obs_clip.pointcloud.points_reduced[None, ...].cuda(), K=1)

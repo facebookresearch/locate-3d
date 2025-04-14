@@ -3,11 +3,10 @@ from typing import Optional
 import numpy as np
 import torch
 
-from preprocessing.image_features.image_feature_encoder import BaseImageFeatureEncoder
 from preprocessing.image_features.image_feature_utils import padding_to_patch
 
 
-class DINOV2Encoder(BaseImageFeatureEncoder):
+class DINOV2Encoder:
     """Encode image to DINO v2 feature"""
 
     def __init__(self, version="base", device: Optional[str] = None):
