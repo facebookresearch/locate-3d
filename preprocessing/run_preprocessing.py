@@ -44,6 +44,8 @@ def main(args, start_idx, end_idx):
         clip_ptc = pointcloud_featurizer_clip.lift_frames(camera_views)
         dino_ptc = pointcloud_featurizer_dino.lift_frames(camera_views)
 
+        # TODO: krishna for the next section
+        
         # Aligning CLIP and DINO features
         _knn = knn_points(obs_dino.pointcloud.points_reduced[None, ...].cuda(), obs_clip.pointcloud.points_reduced[None, ...].cuda(), K=1)
         new_points = obs_clip.pointcloud.points_reduced[_knn.idx[0]].squeeze(1)
