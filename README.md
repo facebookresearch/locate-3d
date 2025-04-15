@@ -82,7 +82,12 @@ This enables a systematic study of generalization capabilities as well as a stro
 ## Running Locate 3D
 
 ## License
-See the [LICENSE](./LICENSE) file for details about the license under which this code is made available.
+
+### Data
+The data is licensed CC-by-NC 4.0, however a portion of the data is an output from Llama 3.2 and subject to the Llama 3.2 license (link). Use of the data to train, fine tune, or otherwise improve an AI model, which is distributed or made available, shall also include "Llama" at the beginning of any such AI model name. Third party content pulled from other locations are subject to their own licenses and you may have other legal obligations or restrictions that govern your use of that content.
+
+### Code
+The majority of `locate-3` is licensed under CC-BY-NC, however portions of the project are available under separate license terms: Pointcept is licensed under the MIT license.
 
 ## Citation
 If you find this repository useful in your research, please consider giving a star :star: and a citation
