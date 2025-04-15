@@ -10,8 +10,6 @@ import numpy as np
 
 class ScanNetPPDataset:
     DEPTH_SCALE_FACTOR = 0.001  # to MM
-    DEFAULT_HEIGHT = 1440.0
-    DEFAULT_WIDTH = 1920.0
 
     def __init__(
         self,
