@@ -1,6 +1,17 @@
 from preprocessing.datasets.scannet_dataset import ScanNetDataset
+from preprocessing.datasets.arkitscenes_dataset import ARKitScenesDataset
 from locate3d_data.scannet_dataset import ScanNetDataset as ScanNetDatasetL3DD
+from locate3d_data.arkitscenes_dataset import ARKitScenesDataset as ARKitScenesDatasetL3DD
 from locate3d_data.locate3d_dataset import Locate3DDataset
+
+dataset = ARKitScenesDataset(root_dir = '/datasets01/ARKitScenes/raw/', frame_skip=30)
+
+d1 = dataset[0]
+
+l3d_dataset = ARKitScenesDatasetL3DD('/datasets01/ARKitScenes/')
+
+d2 = l3d_dataset.get_camera_views('40753679')
+breakpoint()
 
 dataset = ScanNetDataset(root_dir = '/fsx-cortex/shared/datasets/scannet_ac', split = 'val', frame_skip = 30, n_classes = 549)
 
