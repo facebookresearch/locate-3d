@@ -11,6 +11,46 @@ d1 = dataset[0]
 l3d_dataset = ARKitScenesDatasetL3DD('/datasets01/ARKitScenes/')
 
 d2 = l3d_dataset.get_camera_views('40753679')
+
+d3 = dataset[2000]
+
+keys = ['rgb', 'depth_zbuffer', 'cam_to_world', 'cam_K']
+
+comps = [
+    "list(data['key'].shape)",
+    "data['key'].mean().item()",
+    "data['key'].var().item()",
+]
+ecomps = [
+    "data['key'][subset].mean().item()",
+    "data['key'][subset].var().item()"
+]
+    
+for key in keys:
+    for i in comps:
+        i = i.replace('key', key)
+        if "item" in i:
+            print(f"assert {i} == approx({eval(i)})")
+        else:
+            print(f"assert {i} == {eval(i)}")
+    for i in ecomps:
+        i = i.replace('key', key)
+        subset = []
+        for x in data[key].shape:
+            low = torch.randint(x - 1, (1,)).item()
+            high = torch.randint(low + 1 ,x, (1,)).item()
+            subset.append(f'{low}:{high}')
+        subset = ",".join(subset)
+        i = i.replace('subset', subset)
+        if "item" in i:
+            print(f"assert {i} == approx({eval(i)})")
+        else:
+            print(f"assert {i} == {eval(i)}")
+
+        
+    
+        
+    
 breakpoint()
 
 dataset = ScanNetDataset(root_dir = '/fsx-cortex/shared/datasets/scannet_ac', split = 'val', frame_skip = 30, n_classes = 549)

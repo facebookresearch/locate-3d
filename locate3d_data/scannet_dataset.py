@@ -159,9 +159,10 @@ class ScanNetDataset:
             np.load(self.instance_dir / f"{scan_name}_axis_align_matrix.npy")
         ).float()
 
+        rgb = self.get_images(scan_name)
         return {
             "cam_to_world": self.get_poses(scan_name, axis_align_mat),
-            "cam_K": self.get_intrinsics(scan_name, 80),
-            "rgb" : self.get_images(scan_name),
+            "cam_K": self.get_intrinsics(scan_name, len(rgb)),
+            "rgb" : rgb,
             "depth_zbuffer": self.get_depths(scan_name),
         }
