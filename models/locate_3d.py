@@ -61,40 +61,6 @@ def load_state_dict(model, state_dict):
     return model
 
 
- # encoder:
- #  config:
- #    freeze_weights: ${freeze_encoder}
- #    weights_path: /fsx-cortex/pmcvay/jepa/fixintrinsics-clipdino-ptv3-sparsepred-percent8-sn-arkit/jepa-e480.pth.tar
- #    load_weights: true
- #    model:
- #      attn_kernel: all
- #  target:
- #    _target_: cortex.observation_encoders.cortex_model_transform.CortexModelTransform
- #    _partial_: true
-  # downsample:
-  #   target:
-  #     _target_: cortex.world_transforms.downsample_pointcloud.DownsamplePointcloudTransform
-  #     _partial_: true
-  #   config:
-  #     proportion_to_keep: 1
-  #     max_points: 70000
-# decoder:
-#   target:
-#     _target_: cortex.locatex.locatex_decoder.LocateXDecoder
-#     _partial_: true
-#   config:
-#     d_model: 768
-#     input_feat_dim: 256
-#     num_queries: 256
-#     num_decoder_layers: 8
-#     transformer_n_heads: 12
-#     transformer_dim_feedforward: 3072
-#     transformer_dropout: 0.1
-#     transformer_max_drop_path: 0.0
-#     transformer_use_checkpointing: true
-#     freeze_text_encoder: true
-#     text_encoder: clip
-
 class Locate3D(nn.Module):
 
     def __init__(self, cfg):
