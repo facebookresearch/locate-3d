@@ -103,7 +103,7 @@ class Locate3D(nn.Module):
         checkpoint = torch.load(checkpoint_path)
         load_state_dict(self, checkpoint["model_state_dict"])
 
-    def forward(self, sample_batch):
+    def forward(self, featurized_scene_dict, query):
         """
         Forward pass of the model.
 
@@ -113,16 +113,13 @@ class Locate3D(nn.Module):
         Returns:
             Decoder output for the processed batch.
         """
-        post_encoded_batch = []
-        encoded_batch, _ = self.encoder(sample_batch)
-        for element in encoded_batch:
-            for transform in self.post_encode_transforms:
-                element, _ = transform.transform_sample(element)
-            post_encoded_batch.append(element)
-        return self.decoder(post_encoded_batch)
+        # downsample
+        
+        encoded = self.encoder(featurized_scene_dict)
+        return self.decoder(encoded, query)
 
     @torch.inference_mode()
-    def inference(self, sample):
+    def inference(self, featurized_scene_dict, query):
         """ 
         Perform inference on a single sample.
 
@@ -132,26 +129,10 @@ class Locate3D(nn.Module):
         Returns:
             Processed prediction.
         """
+        prediction = self(featurized_scene_dict, query)
+        return self._post_process_sigmoid_loss_prediction(query, prediction)
 
-        if isinstance(sample, list):
-            assert len(list) == 0, "No batched inference supported"
-            sample = sample[0]
-
-        assert isinstance(sample, TrainingSample), "Must be a TrainingSample"
-
-        sample_is_encoded = hasattr(sample, "encoded")
-        if sample_is_encoded:
-            prediction = self.decoder([sample])
-        else:
-            encoded_sample, _ = self.encoder([sample])
-            for transform in self.post_encode_transforms:
-                encoded_sample, _ = transform.transform_sample(encoded_sample)
-            prediction = self.decoder(encoded_sample)
-            encoded_sample[0].encoded = True
-
-        return self._post_process_sigmoid_loss_prediction(sample, prediction)
-
-    def _post_process_sigmoid_loss_prediction(self, sample, prediction):
+    def _post_process_sigmoid_loss_prediction(self, query, prediction):
         '''
         Post-process the model prediction. -- This is for models
         trained with the sigmoid loss.
@@ -179,7 +160,7 @@ class Locate3D(nn.Module):
             instances.append(
                 {
                     "tokens_assigned": token_indices,
-                    "text": get_text_from_token_indices(self.decoder.tokenizer, sample.goal, token_indices),
+                    "text": get_text_from_token_indices(self.decoder.tokenizer, query, token_indices),
                     "mask": mask,
                     "bbox": bbox,
                     'confidence': confidence

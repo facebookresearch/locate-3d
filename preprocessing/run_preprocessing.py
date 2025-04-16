@@ -18,7 +18,13 @@ def main(args, start_idx, end_idx):
 
     cache_path = args.cache_path
 
-    l3dd = Locate3DDataset(annotations_fpath = args.l3dd_annotations_fpath, scannet_data_dir = '/fsx-cortex/shared/datasets/scannet_ac')
+    l3dd = Locate3DDataset(
+        annotations_fpath = args.l3dd_annotations_fpath,
+        scannet_data_dir = args.scannet_data_dir,
+        scannetpp_data_dir = args.scannetpp_data_dir,
+        arkitscenes_data_dir = args.arkitscenes_data_dir,
+
+    )
     scene_list = sorted(l3dd.list_scenes())
     
     pointcloud_featurizer_clip_cfg = OmegaConf.load(os.path.join(SCRIPT_DIR, "config/clip.yaml"))
@@ -29,17 +35,23 @@ def main(args, start_idx, end_idx):
     # Iterate through the dataset and cache the featurized pointclouds
     for idx in range(start_idx, end_idx):
         # Load a sample from the dataset
+        scene_dataset = scene_list[idx][0]
         scene_id = scene_list[idx][1]
-        camera_views = l3dd.get_camera_views(*scene_list[idx])
+        frames_used = scene_list[idx][2]
         
         # Early skip if the scene is already cached
-        cache_file = os.path.join(cache_path, f"{scene_id}.pt")
+        if frames_used is None:
+            cache_file = os.path.join(cache_path, scene_dataset, f"{scene_id}.pt")
+        else:
+            cache_file = os.path.join(cache_path, scene_dataset, f"{scene_id}_start{frames_used[0]}_end{frames_used[-1]}.pt")
         if os.path.exists(cache_file):
             print(f"Cache file already exists: {cache_file}")
             print(f"Skipping cache creation for scene {scene_id}")
             continue
-        
+
         print(f"Processing scene {scene_id} ...")
+        camera_views = l3dd.get_camera_views(*scene_list[idx])
+
         # Build CLIP featurized pointcloud
         clip_pcd = pointcloud_featurizer_clip.lift_frames(camera_views)
         torch.manual_seed(0) # seed the RNG so that the pointclouds are the same
@@ -66,7 +78,7 @@ if __name__ == "__main__":
         "--l3dd_annotations_fpath",
         type=str,
         help="File name of the Locate 3D Dataset to preprocess",
-        choices=['locate3d_data/dataset/all.json', 'locate3d_data/dataset/train_scannet.json', 'locate3d_data/dataset/val_arkitscenes.json', 'locate3d_data/dataset/train.json', 'locate3d_data/dataset/train_scannetpp.json', 'locate3d_data/dataset/val_scannet.json', 'locate3d_data/dataset/train_arkitscenes.json', 'locate3d_data/dataset/val.json', 'locate3d_data/dataset/val_scannetpp.json']
+        choices=['locate3d_data/dataset/all.json', 'locate3d_data/dataset/train_scannet.json', 'locate3d_data/dataset/val_arkitscenes.json', 'locate3d_data/dataset/train.json', 'locate3d_data/dataset/train_scannetpp.json', 'locate3d_data/dataset/val_scannet.json', 'locate3d_data/dataset/train_arkitscenes.json', 'locate3d_data/dataset/val.json', 'locate3d_data/dataset/val_scannetpp.json'],
         required=True,
     )
     parser.add_argument(

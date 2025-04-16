@@ -61,7 +61,32 @@ class ScanNetDataset:
                 seg[superpoints == superpoint_idx] = group['id']
 
         assert len(xyz) == len(rgb) == len(seg)
+
+        # Align
+        axis_align_mat = torch.from_numpy(
+            np.load(self.instance_dir / f"{scan_name}_axis_align_matrix.npy")
+        ).float()
+
+        xyz = self.align_ptc_to_camera(xyz, axis_align_matrix)
+        
         return xyz, rgb, seg, id_to_label
+
+    def align_ptc_to_camera(self, point_cloud, align_matrix):
+        """
+        Reorients pointcloud to align with RGBD+pose camera data using provided realignment matrix.
+        alignment matrix @ [x, y, z, 1]^T = [x', y', z', 1]^T
+        inputs:
+            point_cloud: N X 3
+            align_matrix: 4 X 4
+        returns:
+            point_cloud: N X 3
+        """
+
+        point_cloud = torch.cat(
+            [point_cloud, torch.ones_like(point_cloud[..., :1])], dim=-1
+        )
+        return torch.matmul(point_cloud, align_matrix.T)[..., :3]
+
     
     def get_camera_views(self, scan_name):
         axis_align_mat = torch.from_numpy(

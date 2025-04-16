@@ -69,14 +69,17 @@ class Encoder3DJEPA(nn.Module):
 
         self.load_state_dict(state_dict)
         
-    def forward(self, ptc):
+    def forward(self, featurized_scene_dict):
         """
         :param x: list obs(featurized pointcloud)
         :param masks: indices of patch tokens to mask (remove)
         """
+        batch_size = 1
 
-
-        features = ptc["features"]
+        features = torch.cat([
+            featurized_scene_dict["features_clip"],
+            featurized_scene_dict["features_dino"],
+        ], dim = 1).unsqueeze(0)
 
         zero_locs = features.abs().sum(dim=2) == 0
         zero_locs = zero_locs.unsqueeze(-1).repeat(1, 1, self.input_feat_dim)
@@ -84,7 +87,7 @@ class Encoder3DJEPA(nn.Module):
 
         features = self.feat_norm(features)
 
-        rgb = ptc["rgb"] * 255
+        rgb = featurized_scene_dict["rgb"].unsqueeze(0) * 255
         rgb = self.rgb_harmonic_embed(rgb)
         rgb = self.rgb_harmonic_norm(rgb)
         rgb = self.rgb_projector(rgb)
@@ -96,12 +99,15 @@ class Encoder3DJEPA(nn.Module):
         x = self.transformer_input_norm(x)
 
         data_dict = {
-            "coord": ptc['points'].reshape(-1, 3),
+            "coord": featurized_scene_dict['points'],
             "feat": x.reshape(-1, self.embed_dim),
             "grid_size": self.voxel_size,
-            "offset": (torch.tensor(range(x.shape[0]), device=x.device) + 1) * x.shape[1],
+            "offset": (torch.tensor(range(batch_size), device=x.device) + 1) * x.shape[1],
         }
 
         out = self.point_transformer_v3(data_dict)
 
-        return out.reshape(*x.shape[:2], -1)
+        return {
+            "features": out.reshape(*x.shape[:2], -1).squeeze(),
+            "points": featurized_scene_dict['points']
+        }

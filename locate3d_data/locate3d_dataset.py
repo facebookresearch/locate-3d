@@ -2,6 +2,7 @@ import json
 from typing import Any, Dict
 
 import torch
+import os
 
 from locate3d_data.scannet_dataset import ScanNetDataset
 from locate3d_data.scannetpp_dataset import ScanNetPPDataset
@@ -10,18 +11,21 @@ from locate3d_data.arkitscenes_dataset import ARKitScenesDataset
 class Locate3DDataset:
     def __init__(
         self,
-        annotations_fpath : str, # TODO: combine one full train and val jsons
-        scannet_align_matrix_path: str = None, # TODO: shouldn't this be automatic in directory
-        scannet_data_dir: str = None, # TODO: doesn't make sense to need to specify this if loading arkit json
+        annotations_fpath : str,
+        return_featurized_pointcloud: bool,
+        scannet_data_dir: str = None, 
         scannetpp_data_dir : str = None,
         arkitscenes_data_dir: str = None,
+        cache_path : str = "cache"
     ):
         super().__init__()
         
         self.scannet_dataset = None
         self.scannetpp_dataset = None
         self.arkitscenes_dataset = None
-
+        self.return_featurized_pointcloud = return_featurized_pointcloud
+        self.cache_path = cache_path
+        
         if scannet_data_dir:
             self.scannet_dataset = ScanNetDataset(scannet_data_dir)
         if scannetpp_data_dir:
@@ -31,12 +35,6 @@ class Locate3DDataset:
 
         with open(annotations_fpath) as f:
             self.annos = json.load(f)
-
-        if scannet_align_matrix_path is None:
-            self.align_matrices = None
-        else:
-            with open(scannet_align_matrix_path, "r") as f:
-                self.align_matrices = json.load(f)
 
     def _get_utterance_char_range(self, tokens, token_idxs):
         '''
@@ -93,22 +91,6 @@ class Locate3DDataset:
 
         return dataset_dict
 
-    def align_ptc_to_camera(self, point_cloud, align_matrix):
-        """
-        Reorients pointcloud to align with RGBD+pose camera data using provided realignment matrix.
-        alignment matrix @ [x, y, z, 1]^T = [x', y', z', 1]^T
-        inputs:
-            point_cloud: N X 3
-            align_matrix: 4 X 4
-        returns:
-            point_cloud: N X 3
-        """
-
-        point_cloud = torch.cat(
-            [point_cloud, torch.ones_like(point_cloud[..., :1])], dim=-1
-        )
-        return torch.matmul(point_cloud, align_matrix.T)[..., :3]
-
     def generate_scene_language_data(self, dataset_dict, scene_data):
         """
         Take in output of add_positive_map_and_obj_ids and combine with scene data to produce masks and boxes.
@@ -150,11 +132,6 @@ class Locate3DDataset:
     def load_scannet_scene_data(self, scene_name):
         assert self.scannet_dataset is not None, "ScanNet dataset not loaded."
         xyz, rgb, seg, _ = self.scannet_dataset.get_scan(scene_name)
-
-        if self.align_matrices is not None:
-            align_matrix = torch.tensor(self.align_matrices[scene_name]).reshape(4, 4)
-            xyz = self.align_ptc_to_camera(xyz, align_matrix)
-
         return {"xyz": xyz, "rgb": rgb, "seg": seg}
 
     def load_scannetpp_scene_data(self, scene_name):
@@ -185,7 +162,8 @@ class Locate3DDataset:
         anno = self.annos[idx]
         scene_name = anno["scene_id"]
         scene_dataset = Locate3DDataset.get_scene_dataset_from_annotation(anno)
-            
+
+
         if scene_dataset == 'ScanNet':
             scene_data = self.load_scannet_scene_data(scene_name)
         elif scene_dataset == 'ScanNet++':
@@ -194,27 +172,45 @@ class Locate3DDataset:
             scene_data = self.load_arkitscenes_scene_data(scene_name)
         lang_data = self.generate_scene_language_data(anno, scene_data)
 
-        return {
+        if not self.return_featurized_pointcloud:
+            return {
                 "scene_name": scene_name,
-                **scene_data,
+                "mesh": {**scene_data},
                 **lang_data,
             }
+        
+        if 'frames_used' in anno:
+            frames_used = anno['frames_used']
+            cache_file = os.path.join(self.cache_path, scene_dataset, f"{scene_name}_start{frames_used[0]}_end{frames_used[-1]}.pt")
+        else:
+            cache_file = os.path.join(self.cache_path, scene_dataset, f"{scene_id}.pt")
 
+        assert os.path.exists(cache_file), "Must first run preprocessing to load featurized pointcloud"
+
+        featurized_pointcloud = torch.load(cache_file)
+
+        return {
+            "scene_name": scene_name,
+            "mesh": {**scene_data},
+            "featurized_sensor_pointcloud": {**featurized_pointcloud},
+            "lang_data": {**lang_data},
+        }
+
+            
     def __len__(self):
         """Return number of utterances."""
         return len(self.annos)
 
-    def get_camera_views(self, scene_dataset, scene_name):
+    def get_camera_views(self, scene_dataset, scene_name, frames_used):
         dataset = None
         if scene_dataset == 'ScanNet':
-            dataset = self.scannet_dataset
+            return self.scannet_dataset.get_camera_views(scene_name)
         elif scene_dataset == 'ScanNet++':
-            dataset = self.scannetpp_dataset
+            return self.scannetpp_dataset.get_camera_views(scene_name, frames_used)
         elif scene_dataset == 'ARKitScenes':
-            dataset = self.arkitscenes_dataset
-
-
-        return dataset.get_camera_views(scene_name)
+            return self.arkitscenes_dataset.get_camera_views(scene_name)
+        else:
+            raise Exception("Specified dataset not supported")
     
     def list_scenes(self):
         scenes = set()
@@ -222,8 +218,10 @@ class Locate3DDataset:
         for anno in self.annos:
             scene_name = anno["scene_id"]
             scene_dataset = Locate3DDataset.get_scene_dataset_from_annotation(anno)
-            key = (scene_dataset, scene_name)
-
+            if 'frames_used' in anno:
+                key = (scene_dataset, scene_name, tuple(anno['frames_used']))
+            else:
+                key = (scene_dataset, scene_name, None)
             scenes.add(key)
 
         return list(scenes)

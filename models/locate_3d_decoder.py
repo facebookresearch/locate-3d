@@ -292,13 +292,13 @@ class Locate3DDecoder(nn.Module):
             if isinstance(m, (nn.BatchNorm2d, nn.BatchNorm1d)):
                 m.momentum = 0.1
 
-    def forward(self, samples):
+    def forward(self, encoded_scene, query):
         """Forward pass for the entire model."""
         # Prepare inputs
-        pointclouds = [sample.observations.pointcloud for sample in samples]
-        captions = [samples[i].goal for i in range(len(samples))]
-        ptc_feats = pad_sequence([pcd.features_reduced for pcd in pointclouds], batch_first=True).cuda()
-        ptc_xyz = pad_sequence([pcd.points_reduced for pcd in pointclouds], batch_first=True).cuda()
+        pointclouds = [encoded_scene]
+        captions = [query]
+        ptc_feats = pad_sequence([pcd['features'] for pcd in pointclouds], batch_first=True).cuda()
+        ptc_xyz = pad_sequence([pcd['points'] for pcd in pointclouds], batch_first=True).cuda()
         ptc_mask, query_mask = None, None
 
         # Outputs
