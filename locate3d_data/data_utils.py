@@ -233,3 +233,93 @@ def infer_sky_direction_from_poses(poses_cam_to_world):
         else:
             sky_direction_scene = "UP"
     return sky_direction_scene
+
+
+def rotate_intrinsics_90_degrees_clockwise_about_camera_z(cam_K, W, H, k):
+    """
+    Adjust the intrinsic matrix for camera rotation.
+
+    Parameters:
+    cam_K : torch.Tensor
+        The original intrinsic matrix [batch_size, 3, 3].
+    W : int
+        The width of the image.
+    H : int
+        The height of the image.
+    k : int
+        Number of 90-degree clockwise rotations.
+
+    Returns:
+    cam_K : torch.Tensor
+        The rotated intrinsic matrix [batch_size, 3, 3].
+    """
+
+    k = k % 4
+
+    if k == 0:
+        return cam_K
+
+    f_x = cam_K[:, 0, 0].clone()
+    f_y = cam_K[:, 1, 1].clone()
+    c_x = cam_K[:, 0, 2].clone()
+    c_y = cam_K[:, 1, 2].clone()
+
+    assert (cam_K[:, 0, 1] == 0).all()
+    assert (cam_K[:, 1, 0] == 0).all()
+    assert (cam_K[:, 2, :2] == 0).all()
+    assert (cam_K[:, 2, 2] == 1).all()
+
+    if k == 1:  # 90-degree clockwise rotation
+        cam_K[:, 0, 0] = f_y
+        cam_K[:, 0, 2] = c_y
+        cam_K[:, 1, 1] = f_x
+        cam_K[:, 1, 2] = W - c_x
+
+    elif k == 2:  # 180-degree rotation
+        cam_K[:, 0, 2] = W - c_x
+        cam_K[:, 1, 2] = H - c_y
+
+    elif k == 3:  # 270-degree clockwise rotation
+        cam_K[:, 0, 0] = f_y
+        cam_K[:, 0, 2] = H - c_y
+        cam_K[:, 1, 1] = f_x
+        cam_K[:, 1, 2] = c_x
+
+    else:
+        raise ValueError(
+            "k must be 1, 2, or 3 for 90, 180, or 270-degree rotation respectively."
+        )
+
+    return cam_K
+
+
+def rotate_frames_90_degrees_clockwise_about_camera_z(
+    rgb, depth_zbuffer, cam_to_world, cam_K, orig_W: int, orig_H: int, k: int = 1
+):
+    """
+    Rotates the frame history 90 degrees clockwise about the camera Z-axis.
+
+    Args:
+        orig_W (int): The original width of the frames.
+        orig_H (int): The original height of the frames
+        k (int): Number of times to rotate the observations 90 degrees clockwise. Default is 1.
+
+    """
+    k = k % 4
+    if k == 0:
+        # if k == 0, do nothing
+        return rgb, depth_zbuffer, cam_to_world, cam_K
+    # Rotate RGB and depth zbuffer
+    rgb = torch.rot90(rgb, k=k, dims=(2, 3))  # Rotate along H-W plane
+    depth_zbuffer = torch.rot90(depth_zbuffer, k=k, dims=(1, 2))
+
+    # Define the rotation matrix for 90 degrees clockwise k times about the z-axis
+    rotation_matrix = get_rotation_matrix_z(k)
+    # Rotate camera-to-world pose matrix
+    cam_to_world = torch.matmul(cam_to_world, rotation_matrix)
+
+    cam_K = rotate_intrinsics_90_degrees_clockwise_about_camera_z(
+        cam_K, orig_W, orig_H, k
+    )
+
+    return rgb, depth_zbuffer, cam_to_world, cam_K

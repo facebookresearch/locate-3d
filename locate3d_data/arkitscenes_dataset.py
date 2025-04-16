@@ -13,6 +13,7 @@ from locate3d_data.data_utils import (
     intrinsic_array_to_matrix,
     infer_sky_direction_from_poses,
     interpolate_camera_poses,
+    rotate_frames_90_degrees_clockwise_about_camera_z,
     six_dim_pose_to_transform,
 )
 
@@ -146,13 +147,26 @@ class ARKitScenesDataset:
             ),
             clipped_img_timestamps,
         )
+
+        # Infer sky directions for ARKit from poses
+        # This is a workaround for incorrect sky directions in the dataset
+        sky_dir = infer_sky_direction_from_poses(poses)
+        num_rotations = {"UP": 0, "DOWN": 2, "LEFT": 3, "RIGHT": 1}
+
+        # Stack all data for processing
+        images = torch.stack(images)
+        depths = torch.stack(depths)
         poses = torch.from_numpy(poses).float()
+        intrinsics = torch.stack(intrinsics).float()
+
+        # Rotate frames based on inferred sky directions
+        images, depths, poses, intrinsics = rotate_frames_90_degrees_clockwise_about_camera_z(
+            images, depths, poses, intrinsics, images.shape[3], images.shape[2], k=num_rotations[sky_dir]
+        )
 
         return {
             "cam_to_world": poses,
-            "cam_K": torch.stack(intrinsics).float(),
-            "rgb" : torch.stack(images),
-            "depth_zbuffer": torch.stack(depths),
+            "cam_K": intrinsics,
+            "rgb" : images,
+            "depth_zbuffer": depths,
         }
-            
-
