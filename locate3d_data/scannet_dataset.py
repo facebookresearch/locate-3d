@@ -62,14 +62,26 @@ class ScanNetDataset:
 
         assert len(xyz) == len(rgb) == len(seg)
         return xyz, rgb, seg, id_to_label
+    
+    def get_camera_views(self, scan_name):
+        axis_align_mat = torch.from_numpy(
+            np.load(self.instance_dir / f"{scan_name}_axis_align_matrix.npy")
+        ).float()
 
-    def get_poses(
-        self, scan_name, axis_align_mat
-    ) -> List[torch.Tensor]:
-        
         scene_pose_dir = self.posed_dir / scan_name
         scene_posed_files = [str(s) for s in scene_pose_dir.iterdir()]
-        
+
+        def get_endswith(f_list, endswith):
+            return list(natsorted([s for s in f_list if s.endswith(endswith)]))
+
+        # RGB
+        img_names = get_endswith(scene_posed_files, ".jpg")[:: self.frame_skip]
+        images = []
+
+        # Depth
+        depth_names = get_endswith(scene_posed_files, ".png")[:: self.frame_skip]
+        depths = []
+
         # Pose
         pose_names = list(
             natsorted(
@@ -80,10 +92,11 @@ class ScanNetDataset:
                 ]
             )
         )[:: self.frame_skip]
-
         poses = []
-        for p in pose_names:
-            pose = np.loadtxt(p)
+
+        for i_name, d_name, p_name in zip(img_names, depth_names, pose_names):
+            # Pose
+            pose = np.loadtxt(p_name)
             pose = np.array(pose).reshape(4, 4)
 
             pose = axis_align_mat @ torch.from_numpy(pose.astype(np.float32)).float()
@@ -92,12 +105,23 @@ class ScanNetDataset:
                 continue
 
             poses.append(pose)
-            
-        return torch.stack(poses).float()
-    
-    def get_intrinsics(
-            self, scan_name, num_frames
-    ) -> List[torch.Tensor]:
+
+            # RGB
+            img = get_image_from_path(
+                i_name, height=self.height, width=self.width
+            )
+            images.append(img)
+
+            # Depth
+            depth = get_depth_image_from_path(
+                Path(d_name),
+                height=self.height,
+                width=self.width,
+                scale_factor=self.DEPTH_SCALE_FACTOR,
+            )
+            depths.append(depth)
+
+        # Intrinsics
         intrinsic_name = self.posed_dir / scan_name / "intrinsic.txt"
         
         # Intrinsics shared across images
@@ -106,63 +130,12 @@ class ScanNetDataset:
         K[1] *= float(self.height) / self.DEFAULT_HEIGHT  # scale_y
         K = K[:3, :3]
         intrinsics = torch.repeat_interleave(
-            K.unsqueeze(0), repeats=num_frames, dim=0
-        ).float()
-        return intrinsics
-
-    def get_images(
-        self, scan_name
-    ) -> List[torch.Tensor]:
-        scene_pose_dir = self.posed_dir / scan_name
-        scene_posed_files = [str(s) for s in scene_pose_dir.iterdir()]
-
-        def get_endswith(f_list, endswith):
-            return list(natsorted([s for s in f_list if s.endswith(endswith)]))
-
-        img_names = get_endswith(scene_posed_files, ".jpg")[:: self.frame_skip]
-        images = []
-
-        for i in img_names:
-            img = get_image_from_path(
-                i, height=self.height, width=self.width
-            )
-            images.append(img)
-
-        return torch.stack(images)
-
-
-    def get_depths(
-        self, scan_name
-    ):
-        scene_pose_dir = self.posed_dir / scan_name
-        scene_posed_files = [str(s) for s in scene_pose_dir.iterdir()]
-
-        def get_endswith(f_list, endswith):
-            return list(natsorted([s for s in f_list if s.endswith(endswith)]))
-
-        depth_names = get_endswith(scene_posed_files, ".png")[:: self.frame_skip]
-        depths = []
-
-        for d in depth_names:
-            depth = get_depth_image_from_path(
-                Path(d),
-                height=self.height,
-                width=self.width,
-                scale_factor=self.DEPTH_SCALE_FACTOR,
-            )
-            depths.append(depth)
-
-        return torch.stack(depths).float()
-    
-    def get_camera_views(self, scan_name):
-        axis_align_mat = torch.from_numpy(
-            np.load(self.instance_dir / f"{scan_name}_axis_align_matrix.npy")
+            K.unsqueeze(0), repeats=len(images), dim=0
         ).float()
 
-        rgb = self.get_images(scan_name)
         return {
-            "cam_to_world": self.get_poses(scan_name, axis_align_mat),
-            "cam_K": self.get_intrinsics(scan_name, len(rgb)),
-            "rgb" : rgb,
-            "depth_zbuffer": self.get_depths(scan_name),
+            "cam_to_world": torch.stack(poses).float(),
+            "cam_K": intrinsics,
+            "rgb" : torch.stack(images),
+            "depth_zbuffer": torch.stack(depths).float(),
         }

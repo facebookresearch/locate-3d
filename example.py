@@ -7,6 +7,10 @@ from locate3d_data.locate3d_dataset import Locate3DDataset
 #dataset = ARKitScenesDataset(root_dir = '/datasets01/ARKitScenes/raw/', frame_skip=30)
 
 #d1 = dataset[0]
+l3ddscannet = ScanNetDatasetL3DD('/fsx-cortex/shared/datasets/scannet_ac')
+
+d2 = l3ddscannet.get_camera_views('scene0003_00')
+breakpoint()
 
 l3d_dataset = ARKitScenesDatasetL3DD('/datasets01/ARKitScenes/')
 data = l3d_dataset.get_camera_views('40753679')
