@@ -1,0 +1,9 @@
+encoder:
+  input_feat_dim: 1536
+  embed_dim: 256
+  rgb_proj_dim: 256
+  num_rgb_harmonic_functions: 16
+  ptv3_args:
+    dec_channels: [256, 256, 512, 512]
+    enc_channels: [256, 256, 512, 512, 1024]
+    in_channels: 256

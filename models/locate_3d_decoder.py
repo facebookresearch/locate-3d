@@ -5,7 +5,7 @@ from torch import nn
 from torch.utils.checkpoint import checkpoint
 from torch.nn.utils.rnn import pad_sequence
 import torch.nn.functional as F
-from refexp.loss.matcher import box_cxcyczwhd_to_xyzxyz_jit
+from models.model_utils.bbox_utils import box_cxcyczwhd_to_xyzxyz_jit
 
 
 class LearnedPosEmbeddings(nn.Module):

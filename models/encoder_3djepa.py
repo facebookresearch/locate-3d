@@ -11,7 +11,7 @@ import spconv.pytorch as spconv
 logger = getLogger()
 
 
-class PTv3Wrapper(nn.Module):
+class Encoder3DJEPA(nn.Module):
     """Wrapper to use PTv3 3D Transformers."""
 
     def __init__(
@@ -22,7 +22,6 @@ class PTv3Wrapper(nn.Module):
         num_rgb_harmonic_functions=16,
         ptv3_args=dict(),
         voxel_size=0.05,
-        **kwargs,
     ):
         self.voxel_size = voxel_size
         self.input_feat_dim = input_feat_dim

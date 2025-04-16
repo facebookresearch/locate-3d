@@ -7,7 +7,8 @@ import open3d as o3d
 import torch
 import torch.nn as nn
 
-from cortex.utils.types import TrainingSample
+from models.encoder_3djepa import Encoder3DJEPA
+from models.locate_3d_decoder import Locate3DDecoder
 
 
 def get_text_from_token_indices(tokenizer, text, indices):
@@ -60,6 +61,39 @@ def load_state_dict(model, state_dict):
     return model
 
 
+ # encoder:
+ #  config:
+ #    freeze_weights: ${freeze_encoder}
+ #    weights_path: /fsx-cortex/pmcvay/jepa/fixintrinsics-clipdino-ptv3-sparsepred-percent8-sn-arkit/jepa-e480.pth.tar
+ #    load_weights: true
+ #    model:
+ #      attn_kernel: all
+ #  target:
+ #    _target_: cortex.observation_encoders.cortex_model_transform.CortexModelTransform
+ #    _partial_: true
+  # downsample:
+  #   target:
+  #     _target_: cortex.world_transforms.downsample_pointcloud.DownsamplePointcloudTransform
+  #     _partial_: true
+  #   config:
+  #     proportion_to_keep: 1
+  #     max_points: 70000
+# decoder:
+#   target:
+#     _target_: cortex.locatex.locatex_decoder.LocateXDecoder
+#     _partial_: true
+#   config:
+#     d_model: 768
+#     input_feat_dim: 256
+#     num_queries: 256
+#     num_decoder_layers: 8
+#     transformer_n_heads: 12
+#     transformer_dim_feedforward: 3072
+#     transformer_dropout: 0.1
+#     transformer_max_drop_path: 0.0
+#     transformer_use_checkpointing: true
+#     freeze_text_encoder: true
+#     text_encoder: clip
 
 class Locate3D(nn.Module):
 
@@ -74,38 +108,15 @@ class Locate3D(nn.Module):
         self.cfg = cfg
         self.encoder = self.__init_encoder()
         self.decoder = self.__init_decoder()
-        self.post_encode_transforms = self.__init_post_encode_transforms()
-        self.set_grads()
+        self.freeze_encoder = False
 
     def __init_encoder(self):
         """Initialize and return the encoder module."""
-        encoder_partial = hydra.utils.instantiate(self.cfg.encoder.target)
-        return encoder_partial(self.cfg.encoder.config).cuda()
+        return Encoder3DJEPA(**self.cfg.encoder).cuda()
 
     def __init_decoder(self):
         """Initialize and return the decoder module."""
-        decoder_partial = hydra.utils.instantiate(self.cfg.decoder.target)
-        decoder_config = self.cfg.decoder.config
-        decoder_config.input_feat_dim = self.encoder.feature_len()
-        return decoder_partial(**decoder_config).cuda()
-
-    def __init_post_encode_transforms(self):
-        """Initialize and return post-encoding transforms."""
-        post_encode_transforms = []
-        if (
-            hasattr(self.cfg, "post_encode_transforms")
-            and self.cfg.post_encode_transforms
-        ):
-            for name, transform in self.cfg.post_encode_transforms.items():
-                transform = hydra.utils.instantiate(transform.target)(transform.config)
-                post_encode_transforms.append(transform)
-        return post_encode_transforms
-
-    def set_grads(self):
-        for param in self.encoder.parameters():
-            param.requires_grad = not self.cfg.freeze_encoder
-        for param in self.decoder.parameters():
-            param.requires_grad = True
+        return Locate3DDecoder(**self.cfg.decoder).cuda()
 
     def train(self, mode: bool = True):
         """Set the model to training mode."""
@@ -115,7 +126,7 @@ class Locate3D(nn.Module):
             self.decoder.eval()
         else:
             self.decoder.train()
-            if not self.cfg.freeze_encoder:
+            if not self.freeze_encoder:
                 self.encoder.train()
             else:
                 self.encoder.eval()
