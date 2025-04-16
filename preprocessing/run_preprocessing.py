@@ -18,7 +18,7 @@ def main(args, start_idx, end_idx):
 
     cache_path = args.cache_path
 
-    l3dd = Locate3DDataset(annotations_fpath = 'locate3d_data/dataset/train_scannet.json', scannet_data_dir = '/fsx-cortex/shared/datasets/scannet_ac')
+    l3dd = Locate3DDataset(annotations_fpath = args.l3dd_annotations_fpath, scannet_data_dir = '/fsx-cortex/shared/datasets/scannet_ac')
     scene_list = sorted(l3dd.list_scenes())
     
     pointcloud_featurizer_clip_cfg = OmegaConf.load(os.path.join(SCRIPT_DIR, "config/clip.yaml"))
@@ -63,30 +63,35 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--dataset_name",
+        "--l3dd_annotations_fpath",
         type=str,
-        help="Name of the cortex dataset class",
-        choices=["ScannetPPDataset", "ARKitScenesDataset", "ScanNetDataset"],
-        required=True,
-    )
-    parser.add_argument(
-        "--dataset_split",
-        type=str,
-        help="Dataset split to cache",
-        choices=["train", "val", "test"],
-        required=True,
-    )
-    parser.add_argument(
-        "--dataset_path",
-        type=str,
-        help="Path to the dataset directory",
+        help="File name of the Locate 3D Dataset to preprocess",
+        choices=['locate3d_data/dataset/all.json', 'locate3d_data/dataset/train_scannet.json', 'locate3d_data/dataset/val_arkitscenes.json', 'locate3d_data/dataset/train.json', 'locate3d_data/dataset/train_scannetpp.json', 'locate3d_data/dataset/val_scannet.json', 'locate3d_data/dataset/train_arkitscenes.json', 'locate3d_data/dataset/val.json', 'locate3d_data/dataset/val_scannetpp.json']
         required=True,
     )
     parser.add_argument(
         "--cache_path",
         type=str,
-        help="Path to store the cached dataset",
-        required=True,
+        help="Path to store preprocess cache data",
+        default='cache',
+    )
+    parser.add_argument(
+        "--scannet_data_dir",
+        type=str,
+        help="Path to the scannet dataset directory",
+        default=None,
+    )
+    parser.add_argument(
+        "--scannetpp_data_dir",
+        type=str,
+        help="Path to the scannet dataset directory",
+        default=None,
+    )
+    parser.add_argument(
+        "--arkitscenes_data_dir",
+        type=str,
+        help="Path to the scannet dataset directory",
+        default=None,
     )
     parser.add_argument(
         "--start",
@@ -99,18 +104,6 @@ if __name__ == "__main__":
         type=int,
         help="Index of last scene to cache",
         default=-1,
-    )
-    parser.add_argument(
-        "--voxel_size_cm",
-        type=int,
-        help="Voxel size in centimeters",
-        default=5,
-    )
-    parser.add_argument(
-        "--frameskip_fps",
-        type=int,
-        help="Frameskip in frames per second",
-        default=30,
     )
 
     args = parser.parse_args()

@@ -1,9 +1,14 @@
 from locate3d_data.arkitscenes_dataset import ARKitScenesDataset
 from locate3d_data.scannet_dataset import ScanNetDataset
+from locate3d_data.scannetpp_dataset import ScanNetPPDataset
 from pytest import approx
+from pytest import approx as ptapprox
+import functools
+
 
 ARKIT_DIRECTORY = '/datasets01/ARKitScenes/' # TODO: remove
 SCANNET_DIRECTORY = '/fsx-cortex/shared/datasets/scannet_ac'
+SCANNETPP_DIRECTORY = '/datasets01/scannetpp/07252024'
 
 def test_scannet_camera_views():
     dataset = ScanNetDataset(SCANNET_DIRECTORY)
@@ -151,3 +156,41 @@ def test_arkit_camera_views():
     
     assert data['cam_K'][55:126,0:2,0:1].mean().item() == approx(106.31748962402344)
     assert data['cam_K'][27:36,1:2,0:2].var().item() == approx(11980.294921875)
+
+def test_snpp_camera_views():
+    approx = functools.partial(ptapprox, rel=2e-3, abs=2e-3)
+
+    ds = ScanNetPPDataset(SCANNETPP_DIRECTORY)
+    frames = list(range(30*100))[::30][11:22]
+    data = ds.get_camera_views("036bce3393", frames)
+
+    # RGB
+    assert list(data['rgb'].shape) == [11, 3, 480, 640]
+    assert data['rgb'].mean().item() == approx(0.5180988907814026)
+    assert data['rgb'].var().item() == approx(0.06683463603258133)
+    
+    assert data['rgb'][1:2,1:2,295:311,536:557].mean().item() == approx(0.4262488782405853)
+    assert data['rgb'][1:8,0:1,160:204,628:629].var().item() == approx(0.033044662326574326)
+
+    # Depth
+    assert list(data['depth_zbuffer'].shape) == [11, 480, 640]
+    assert data['depth_zbuffer'].mean().item() == approx(2.1898138523101807)
+    assert data['depth_zbuffer'].var().item() == approx(0.7589995861053467)
+    
+    assert data['depth_zbuffer'][5:7,340:472,292:635].mean().item() == approx(1.4523074626922607)
+    assert data['depth_zbuffer'][5:9,407:478,92:160].var().item() == approx(0.5101518630981445)
+
+    # Cam to world
+    assert list(data['cam_to_world'].shape) == [11, 4, 4]
+    assert data['cam_to_world'].mean().item() == approx(0.8116238117218018)
+    assert data['cam_to_world'].var().item() == approx(3.2991349697113037)
+    
+    assert data['cam_to_world'][5:7,1:2,1:2].mean().item() == approx(-0.28732001781463623)
+
+    # Cam K
+    assert list(data['cam_K'].shape) == [11, 3, 3]
+    assert data['cam_K'].mean().item() == approx(167.99270629882812)
+    assert data['cam_K'].var().item() == approx(40187.38671875)
+    
+    assert data['cam_K'][0:6,0:1,1:2].mean().item() == approx(0.0)
+    assert data['cam_K'][0:3,0:1,1:2].var().item() == approx(0.0)
