@@ -92,3 +92,7 @@ We closely mirror the structure of [ScanEnts3D-NR3D](https://scanents3d.github.i
 Check out `dataset_playground.ipynb` for interactive visualization of any sample in the dataset. You'll need to supply your own copy of ARKitScenes/ScanNet/ScanNet++ and update the paths in the first cell.
 
 No preprocessing is required to use [ScanNet](http://www.scan-net.org/) or [ScanNet++](https://kaldir.vc.in.tum.de/scannetpp/) with Locate 3D Dataset -- simply follow the instructions on the respective sites to download the raw dataset files. For [ARKitScenes](https://github.com/apple/ARKitScenes/blob/main/DATA.md), be sure to follow the instructions to download the 3dod data split.
+
+### License
+
+The data is licensed CC-by-NC 4.0, however a portion of the data is an output from Llama 3.2 and subject to the Llama 3.2 license (link). Use of the data to train, fine tune, or otherwise improve an AI model, which is distributed or made available, shall also include "Llama" at the beginning of any such AI model name. Third party content pulled from other locations are subject to their own licenses and you may have other legal obligations or restrictions that govern your use of that content.
