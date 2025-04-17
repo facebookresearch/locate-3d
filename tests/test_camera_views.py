@@ -6,9 +6,9 @@ from pytest import approx as ptapprox
 import functools
 
 
-ARKIT_DIRECTORY = '/datasets01/ARKitScenes/' # TODO: remove
-SCANNET_DIRECTORY = '/fsx-cortex/shared/datasets/scannet_ac'
-SCANNETPP_DIRECTORY = '/datasets01/scannetpp/07252024'
+ARKIT_DIRECTORY = '[arkit_dir']
+SCANNET_DIRECTORY = '[scannet_dir]'
+SCANNETPP_DIRECTORY = '[scannetpp_dir]'
 
 def test_scannet_camera_views():
     dataset = ScanNetDataset(SCANNET_DIRECTORY)
