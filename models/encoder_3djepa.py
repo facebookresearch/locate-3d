@@ -1,3 +1,9 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+
 import math
 from logging import getLogger
 
@@ -10,6 +16,7 @@ from models.point_transformer_v3 import PointTransformerV3
 import spconv.pytorch as spconv
 from functools import partial
 from huggingface_hub import PyTorchModelHubMixin
+
 logger = getLogger()
 
 
@@ -33,16 +40,14 @@ class Encoder3DJEPA(
         self.input_feat_dim = input_feat_dim
         self.embed_dim = embed_dim
         norm_layer = partial(nn.LayerNorm, eps=1e-6)
-        
+
         super().__init__()
         self.zero_token = nn.Parameter(torch.zeros(input_feat_dim))
 
         self.rgb_harmonic_embed = HarmonicEmbedding(
             n_harmonic_functions=num_rgb_harmonic_functions
         )
-        self.rgb_harmonic_norm = norm_layer(
-            3 * 2 * num_rgb_harmonic_functions + 3
-        )
+        self.rgb_harmonic_norm = norm_layer(3 * 2 * num_rgb_harmonic_functions + 3)
 
         self.rgb_projector = nn.Sequential(
             nn.Linear(3 * 2 * num_rgb_harmonic_functions + 3, rgb_proj_dim),
@@ -55,7 +60,7 @@ class Encoder3DJEPA(
         self.feat_norm = norm_layer(input_feat_dim)
 
         self.transformer_input_norm = norm_layer(embed_dim)
-        
+
         self.point_transformer_v3 = PointTransformerV3(**ptv3_args)
         self.num_features = self.point_transformer_v3.out_dim
 
@@ -75,7 +80,7 @@ class Encoder3DJEPA(
         }
 
         self.load_state_dict(state_dict)
-        
+
     def forward(self, featurized_scene_dict):
         """
         :param x: list obs(featurized pointcloud)
@@ -83,10 +88,13 @@ class Encoder3DJEPA(
         """
         batch_size = 1
 
-        features = torch.cat([
-            featurized_scene_dict["features_clip"],
-            featurized_scene_dict["features_dino"],
-        ], dim = 1).unsqueeze(0)
+        features = torch.cat(
+            [
+                featurized_scene_dict["features_clip"],
+                featurized_scene_dict["features_dino"],
+            ],
+            dim=1,
+        ).unsqueeze(0)
 
         zero_locs = features.abs().sum(dim=2) == 0
         zero_locs = zero_locs.unsqueeze(-1).repeat(1, 1, self.input_feat_dim)
@@ -106,15 +114,16 @@ class Encoder3DJEPA(
         x = self.transformer_input_norm(x)
 
         data_dict = {
-            "coord": featurized_scene_dict['points'],
+            "coord": featurized_scene_dict["points"],
             "feat": x.reshape(-1, self.embed_dim),
             "grid_size": self.voxel_size,
-            "offset": (torch.tensor(range(batch_size), device=x.device) + 1) * x.shape[1],
+            "offset": (torch.tensor(range(batch_size), device=x.device) + 1)
+            * x.shape[1],
         }
 
         out = self.point_transformer_v3(data_dict)
 
         return {
             "features": out.reshape(*x.shape[:2], -1).squeeze(),
-            "points": featurized_scene_dict['points']
+            "points": featurized_scene_dict["points"],
         }

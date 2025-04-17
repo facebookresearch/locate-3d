@@ -1,3 +1,9 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+
 from PIL import Image
 from typing import Any, Dict, List, Optional, Tuple, Union
 from torchvision.transforms import functional as F
@@ -9,6 +15,7 @@ import numpy as np
 from scipy.interpolate import CubicSpline
 from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
+
 
 def get_image_from_path(
     image_path: Union[str, Path],
@@ -29,6 +36,7 @@ def get_image_from_path(
         image = image[:, :, :3]
 
     return image
+
 
 def get_depth_image_from_path(
     filepath: Path,
@@ -61,6 +69,7 @@ def get_depth_image_from_path(
     if do_resize:
         image = cv2.resize(image, (width, height), interpolation=interpolation)
     return torch.from_numpy(image[:, :])
+
 
 def intrinsic_array_to_matrix(intrinsics: np.ndarray):
     """

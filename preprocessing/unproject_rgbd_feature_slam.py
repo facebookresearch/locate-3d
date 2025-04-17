@@ -4,6 +4,12 @@
 # LICENSE file in the root directory of this source tree.
 
 
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+
 # copied from https://github.com/facebookresearch/home-robot/blob/main/src/home_robot/home_robot/mapping/voxel/feature/conceptfusion.py
 
 import logging
@@ -139,7 +145,7 @@ class UnprojectRGBDFeatureSLAM:
         depth: torch.Tensor,
         pose: torch.Tensor,
         intrinsic: torch.Tensor,
-        features: Optional[torch.Tensor] = None
+        features: Optional[torch.Tensor] = None,
     ):
         """
         image : (batch x color x width x height)
@@ -158,11 +164,7 @@ class UnprojectRGBDFeatureSLAM:
         if features is None and self.image_feature_generator is not None:
             features = []
             for i in range(rgb.shape[0]):
-                features.append(
-                    self.image_feature_generator.generate_features(
-                        rgb[i]
-                    )
-                )
+                features.append(self.image_feature_generator.generate_features(rgb[i]))
             features = torch.cat(features, dim=0)
 
         original_intrinsics = intrinsic.to(self.device)

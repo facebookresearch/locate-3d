@@ -1,3 +1,9 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+
 import os
 from collections import Counter
 
@@ -11,6 +17,7 @@ from models.encoder_3djepa import Encoder3DJEPA
 from models.locate_3d_decoder import Locate3DDecoder
 
 from huggingface_hub import PyTorchModelHubMixin
+
 
 def get_text_from_token_indices(tokenizer, text, indices):
     """
@@ -57,12 +64,15 @@ def load_state_dict(model, state_dict):
 
 
 def downsample(pointcloud_dict, limit_points):
-    if len(pointcloud_dict['points']) < limit_points:
+    if len(pointcloud_dict["points"]) < limit_points:
         return pointcloud_dict
-    
-    indices = torch.randperm(len(pointcloud_dict['points']), device=pointcloud_dict['points'].device)[:limit_points]
-    return {k: v[indices] for k,v in pointcloud_dict.items()}
-    
+
+    indices = torch.randperm(
+        len(pointcloud_dict["points"]), device=pointcloud_dict["points"].device
+    )[:limit_points]
+    return {k: v[indices] for k, v in pointcloud_dict.items()}
+
+
 class Locate3D(
     nn.Module,
     PyTorchModelHubMixin,
@@ -84,11 +94,11 @@ class Locate3D(
 
     def __init_encoder(self):
         """Initialize and return the encoder module."""
-        return Encoder3DJEPA(**self.cfg['encoder']).cuda()
+        return Encoder3DJEPA(**self.cfg["encoder"]).cuda()
 
     def __init_decoder(self):
         """Initialize and return the decoder module."""
-        return Locate3DDecoder(**self.cfg['decoder']).cuda()
+        return Locate3DDecoder(**self.cfg["decoder"]).cuda()
 
     def train(self, mode: bool = True):
         """Set the model to training mode."""
@@ -120,18 +130,18 @@ class Locate3D(
             Decoder output for the processed batch.
         """
         # downsample
-        
+
         encoded = self.encoder(featurized_scene_dict)
         return self.decoder(encoded, query)
 
     @torch.inference_mode()
     def inference(self, featurized_scene_dict, query):
-        """ 
+        """
         Perform inference on a single sample.
 
         Args:
             sample: Input sample.
-        
+
         Returns:
             Processed prediction.
         """
@@ -139,38 +149,42 @@ class Locate3D(
         return self._post_process_sigmoid_loss_prediction(query, prediction)
 
     def _post_process_sigmoid_loss_prediction(self, query, prediction):
-        '''
+        """
         Post-process the model prediction. -- This is for models
         trained with the sigmoid loss.
 
         Args:
             sample: Training sample.
             prediction: Model prediction.
-        '''
+        """
 
         assert len(prediction["pred_logits"]) == 1, "Batched inference not supported"
-        masks, tokens = torch.where(prediction['pred_logits'][0].sigmoid() > 0.5)
+        masks, tokens = torch.where(prediction["pred_logits"][0].sigmoid() > 0.5)
         correspondence = {}
         for mask, token in zip(masks, tokens):
             if mask.item() not in correspondence:
                 correspondence[mask.item()] = []
             correspondence[mask.item()].append(token.item())
-        
+
         instances = []
         for mask_idx in correspondence.keys():
-            mask = prediction['pred_masks'][0][mask_idx]
+            mask = prediction["pred_masks"][0][mask_idx]
             token_indices = correspondence[mask_idx]
-            confidence = prediction['pred_logits'][0][mask_idx][token_indices].sigmoid().mean()
+            confidence = (
+                prediction["pred_logits"][0][mask_idx][token_indices].sigmoid().mean()
+            )
             mask = mask.sigmoid().detach()
-            bbox = prediction['pred_boxes'][0][mask_idx]
+            bbox = prediction["pred_boxes"][0][mask_idx]
             instances.append(
                 {
                     "tokens_assigned": token_indices,
-                    "text": get_text_from_token_indices(self.decoder.tokenizer, query, token_indices),
+                    "text": get_text_from_token_indices(
+                        self.decoder.tokenizer, query, token_indices
+                    ),
                     "mask": mask,
                     "bbox": bbox,
-                    'confidence': confidence
+                    "confidence": confidence,
                 }
             )
-        
+
         return instances

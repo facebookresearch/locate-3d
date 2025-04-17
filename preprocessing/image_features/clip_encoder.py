@@ -1,9 +1,16 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+
 from typing import List, Optional, Union
 
 import clip
 import numpy as np
 import torch
 from PIL import Image
+
 
 class ClipEncoder:
     """Simple wrapper for encoding different things as text."""

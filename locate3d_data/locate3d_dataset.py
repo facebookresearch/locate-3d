@@ -1,3 +1,9 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+
 import json
 from typing import Any, Dict
 
@@ -8,24 +14,25 @@ from locate3d_data.scannet_dataset import ScanNetDataset
 from locate3d_data.scannetpp_dataset import ScanNetPPDataset
 from locate3d_data.arkitscenes_dataset import ARKitScenesDataset
 
+
 class Locate3DDataset:
     def __init__(
         self,
-        annotations_fpath : str,
+        annotations_fpath: str,
         return_featurized_pointcloud: bool,
-        scannet_data_dir: str = None, 
-        scannetpp_data_dir : str = None,
+        scannet_data_dir: str = None,
+        scannetpp_data_dir: str = None,
         arkitscenes_data_dir: str = None,
-        cache_path : str = "cache"
+        cache_path: str = "cache",
     ):
         super().__init__()
-        
+
         self.scannet_dataset = None
         self.scannetpp_dataset = None
         self.arkitscenes_dataset = None
         self.return_featurized_pointcloud = return_featurized_pointcloud
         self.cache_path = cache_path
-        
+
         if scannet_data_dir:
             self.scannet_dataset = ScanNetDataset(scannet_data_dir)
         if scannetpp_data_dir:
@@ -37,33 +44,33 @@ class Locate3DDataset:
             self.annos = json.load(f)
 
     def _get_utterance_char_range(self, tokens, token_idxs):
-        '''
+        """
         Convert from token indices to character indices in the utterance.
-        '''
+        """
         first_token_idx = token_idxs[0]
-        start_index = len(" ".join(tokens[:token_idxs[0]]))
+        start_index = len(" ".join(tokens[: token_idxs[0]]))
         if first_token_idx > 0:
             start_index += 1  # plus one for space
-        
+
         last_token_idx = token_idxs[-1]
-        end_index = len(" ".join(tokens[:last_token_idx])) + len(
-            tokens[last_token_idx]
-        )
+        end_index = len(" ".join(tokens[:last_token_idx])) + len(tokens[last_token_idx])
         if last_token_idx > 0:
             end_index += 1  # plus one because the span is exclusive
 
         return [start_index, end_index]
 
     def add_positive_map_and_obj_ids(self, dataset_dict):
-        '''
+        """
         Add positive map and object IDs to the dataset dictionary.
         Processes the dataset dictionary to extract object IDs and their token ranges in the utterance.
-        '''
+        """
 
         target_obj_id = int(dataset_dict["object_id"])
         tokens = dataset_dict["token"]
         utterance = " ".join(tokens)
-        tokens_positive = []  # Character spans of tokens corresponding to each object ID
+        tokens_positive = (
+            []
+        )  # Character spans of tokens corresponding to each object ID
         object_ids = []  # Object ID (corresponds to ScanNet/ScanNet++ instance mask ID)
 
         for entity in dataset_dict["entities"]:
@@ -105,16 +112,18 @@ class Locate3DDataset:
 
         # There is one sample in ScanEnts-ScanRefer which has no entities.
         if len(all_ids) > 0:
-            if 'seg' not in scene_data:
+            if "seg" not in scene_data:
                 masks = None
-                boxes = torch.tensor([dataset_dict['gt_boxes'][_id] for _id in all_ids])
+                boxes = torch.tensor([dataset_dict["gt_boxes"][_id] for _id in all_ids])
             else:
-                masks = torch.stack([scene_data['seg'] == _id for _id in all_ids])
+                masks = torch.stack([scene_data["seg"] == _id for _id in all_ids])
 
                 n_instances = len(all_ids)
-                boxes = torch.empty(size=(n_instances, 3, 2)) - torch.inf # Boxes associated with empty masks are all -inf.
+                boxes = (
+                    torch.empty(size=(n_instances, 3, 2)) - torch.inf
+                )  # Boxes associated with empty masks are all -inf.
                 for i in range(n_instances):
-                    masked_points = scene_data['xyz'][masks[i] > 0]
+                    masked_points = scene_data["xyz"][masks[i] > 0]
                     boxes[i, :, 0] = masked_points.min(axis=0)[0]
                     boxes[i, :, 1] = masked_points.max(axis=0)[0]
 
@@ -147,10 +156,14 @@ class Locate3DDataset:
     @staticmethod
     def get_scene_dataset_from_annotation(anno):
         if "scene_dataset" in anno:
-            scene_dataset = anno['scene_dataset']
-            assert scene_dataset in ['ScanNet', 'ScanNet++', 'ARKitScenes'], "Unknown scene dataset"
+            scene_dataset = anno["scene_dataset"]
+            assert scene_dataset in [
+                "ScanNet",
+                "ScanNet++",
+                "ARKitScenes",
+            ], "Unknown scene dataset"
         else:
-            scene_dataset = 'ScanNet' # For compatibility with ScanEnts-ScanRefer
+            scene_dataset = "ScanNet"  # For compatibility with ScanEnts-ScanRefer
 
         return scene_dataset
 
@@ -163,12 +176,11 @@ class Locate3DDataset:
         scene_name = anno["scene_id"]
         scene_dataset = Locate3DDataset.get_scene_dataset_from_annotation(anno)
 
-
-        if scene_dataset == 'ScanNet':
+        if scene_dataset == "ScanNet":
             scene_data = self.load_scannet_scene_data(scene_name)
-        elif scene_dataset == 'ScanNet++':
+        elif scene_dataset == "ScanNet++":
             scene_data = self.load_scannetpp_scene_data(scene_name)
-        elif scene_dataset == 'ARKitScenes':
+        elif scene_dataset == "ARKitScenes":
             scene_data = self.load_arkitscenes_scene_data(scene_name)
         lang_data = self.generate_scene_language_data(anno, scene_data)
 
@@ -178,14 +190,22 @@ class Locate3DDataset:
                 "mesh": {**scene_data},
                 **lang_data,
             }
-        
-        if 'frames_used' in anno:
-            frames_used = anno['frames_used']
-            cache_file = os.path.join(self.cache_path, scene_dataset, f"{scene_name}_start{frames_used[0]}_end{frames_used[-1]}.pt")
-        else:
-            cache_file = os.path.join(self.cache_path, scene_dataset, f"{scene_name}.pt")
 
-        assert os.path.exists(cache_file), "Must first run preprocessing to load featurized pointcloud"
+        if "frames_used" in anno:
+            frames_used = anno["frames_used"]
+            cache_file = os.path.join(
+                self.cache_path,
+                scene_dataset,
+                f"{scene_name}_start{frames_used[0]}_end{frames_used[-1]}.pt",
+            )
+        else:
+            cache_file = os.path.join(
+                self.cache_path, scene_dataset, f"{scene_name}.pt"
+            )
+
+        assert os.path.exists(
+            cache_file
+        ), "Must first run preprocessing to load featurized pointcloud"
 
         featurized_pointcloud = torch.load(cache_file)
 
@@ -196,30 +216,29 @@ class Locate3DDataset:
             "lang_data": {**lang_data},
         }
 
-            
     def __len__(self):
         """Return number of utterances."""
         return len(self.annos)
 
     def get_camera_views(self, scene_dataset, scene_name, frames_used):
         dataset = None
-        if scene_dataset == 'ScanNet':
+        if scene_dataset == "ScanNet":
             return self.scannet_dataset.get_camera_views(scene_name)
-        elif scene_dataset == 'ScanNet++':
+        elif scene_dataset == "ScanNet++":
             return self.scannetpp_dataset.get_camera_views(scene_name, frames_used)
-        elif scene_dataset == 'ARKitScenes':
+        elif scene_dataset == "ARKitScenes":
             return self.arkitscenes_dataset.get_camera_views(scene_name)
         else:
             raise Exception("Specified dataset not supported")
-    
+
     def list_scenes(self):
         scenes = set()
 
         for anno in self.annos:
             scene_name = anno["scene_id"]
             scene_dataset = Locate3DDataset.get_scene_dataset_from_annotation(anno)
-            if 'frames_used' in anno:
-                key = (scene_dataset, scene_name, tuple(anno['frames_used']))
+            if "frames_used" in anno:
+                key = (scene_dataset, scene_name, tuple(anno["frames_used"]))
             else:
                 key = (scene_dataset, scene_name, None)
             scenes.add(key)

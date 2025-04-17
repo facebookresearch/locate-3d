@@ -1,3 +1,9 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+
 import logging
 from typing import Optional, Union
 
@@ -10,11 +16,7 @@ logger = logging.getLogger(__name__)
 class EmbeddingFeatureImageGenerator:
     NO_MASK_IDX = -1
 
-    def __init__(
-        self,
-        image_feature_encoder,
-        device: Optional[str] = None
-    ) -> None:
+    def __init__(self, image_feature_encoder, device: Optional[str] = None) -> None:
         """
         Turns an image into pixel-aligned features
 
@@ -73,7 +75,7 @@ class EmbeddingFeatureImageGenerator:
         """
         if self.image_feature_encoder is None:
             return None
-        
+
         uint_img = (image.cpu().numpy() * 255).astype(np.uint8)
 
         outfeat = self.generate_img_features(uint_img)

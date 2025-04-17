@@ -1,3 +1,9 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+
 from locate3d_data.arkitscenes_dataset import ARKitScenesDataset
 from locate3d_data.scannet_dataset import ScanNetDataset
 from locate3d_data.scannetpp_dataset import ScanNetPPDataset

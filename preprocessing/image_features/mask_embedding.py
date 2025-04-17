@@ -1,3 +1,9 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+
 import logging
 from typing import List, Optional
 
@@ -31,7 +37,7 @@ class MaskEmbeddingFeatureImageGenerator:
     def __init__(
         self,
         mask_generator: SamAutomaticMaskGenerator,
-        image_text_encoder = None,
+        image_text_encoder=None,
         device: Optional[str] = None,
     ) -> None:
         """
@@ -204,8 +210,5 @@ class MaskEmbeddingFeatureImageGenerator:
         global_feat = self.generate_global_features(uint_img)
 
         # CLIP features per ROI
-        outfeat = self.generate_local_features(
-            uint_img, masks, global_feat
-        )
+        outfeat = self.generate_local_features(uint_img, masks, global_feat)
         return outfeat
-

@@ -4,8 +4,8 @@
 # LICENSE file in the root directory of this source tree.
 
 """
-    This file contains a torch implementation and helpers of a
-    "voxelized pointcloud" that stores features, centroids, and counts in a sparse voxel grid
+This file contains a torch implementation and helpers of a
+"voxelized pointcloud" that stores features, centroids, and counts in a sparse voxel grid
 """
 
 # from https://github.com/facebookresearch/home-robot/blob/a32a23d10f7b4474833ae66e995af666e4e80718/src/home_robot/home_robot/utils/voxel.py#L21

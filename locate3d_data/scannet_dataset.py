@@ -1,3 +1,9 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+
 from typing import Any, Dict, List, Optional, Tuple, Union
 from natsort import natsorted
 from pathlib import Path
@@ -7,6 +13,7 @@ import pyminiply
 import json
 
 from locate3d_data.data_utils import get_image_from_path, get_depth_image_from_path
+
 
 class ScanNetDataset:
     DEPTH_SCALE_FACTOR = 0.001  # to MM
@@ -18,10 +25,10 @@ class ScanNetDataset:
         self.use_hi_quality_mesh = use_hi_quality_mesh
 
         # Locate 3D default value
-        self.frame_skip = 30 
+        self.frame_skip = 30
         self.width = 640
         self.height = 480
-        
+
         # Sub directories
         self.posed_dir = self.dataset_path / "posed_images"
         self.instance_dir = self.dataset_path / "scannet_instance_data"
@@ -49,16 +56,16 @@ class ScanNetDataset:
         with open(segments_json) as f:
             segments = json.load(f)
 
-        superpoints = torch.tensor(superpoints['segIndices'])
+        superpoints = torch.tensor(superpoints["segIndices"])
 
         seg = torch.zeros_like(superpoints) - 1
 
-        id_to_label = dict() # Can probably be deleted later
-        for group in segments['segGroups']:
-            assert group['id'] == group['objectId']
-            id_to_label[group['id']] = group['label'] # Can probably be deleted later
-            for superpoint_idx in group['segments']:
-                seg[superpoints == superpoint_idx] = group['id']
+        id_to_label = dict()  # Can probably be deleted later
+        for group in segments["segGroups"]:
+            assert group["id"] == group["objectId"]
+            id_to_label[group["id"]] = group["label"]  # Can probably be deleted later
+            for superpoint_idx in group["segments"]:
+                seg[superpoints == superpoint_idx] = group["id"]
 
         assert len(xyz) == len(rgb) == len(seg)
 
@@ -68,7 +75,7 @@ class ScanNetDataset:
         ).float()
 
         xyz = self.align_ptc_to_camera(xyz, axis_align_mat)
-        
+
         return xyz, rgb, seg, id_to_label
 
     def align_ptc_to_camera(self, point_cloud, align_matrix):
@@ -87,7 +94,6 @@ class ScanNetDataset:
         )
         return torch.matmul(point_cloud, align_matrix.T)[..., :3]
 
-    
     def get_camera_views(self, scan_name):
         axis_align_mat = torch.from_numpy(
             np.load(self.instance_dir / f"{scan_name}_axis_align_matrix.npy")
@@ -125,16 +131,14 @@ class ScanNetDataset:
             pose = np.array(pose).reshape(4, 4)
 
             pose = axis_align_mat @ torch.from_numpy(pose.astype(np.float32)).float()
-            
+
             if torch.any(torch.isnan(pose)):
                 continue
 
             poses.append(pose)
 
             # RGB
-            img = get_image_from_path(
-                i_name, height=self.height, width=self.width
-            )
+            img = get_image_from_path(i_name, height=self.height, width=self.width)
             images.append(img)
 
             # Depth
@@ -148,7 +152,7 @@ class ScanNetDataset:
 
         # Intrinsics
         intrinsic_name = self.posed_dir / scan_name / "intrinsic.txt"
-        
+
         # Intrinsics shared across images
         K = torch.from_numpy(np.loadtxt(intrinsic_name).astype(np.float32))
         K[0] *= float(self.width) / self.DEFAULT_WIDTH  # scale_x
@@ -161,6 +165,6 @@ class ScanNetDataset:
         return {
             "cam_to_world": torch.stack(poses).float(),
             "cam_K": intrinsics,
-            "rgb" : torch.stack(images),
+            "rgb": torch.stack(images),
             "depth_zbuffer": torch.stack(depths).float(),
         }

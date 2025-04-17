@@ -1,3 +1,9 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+
 import torch
 import pyminiply
 import json
@@ -45,12 +51,17 @@ class ScanNetPPDataset:
         )
 
     def get_scan(self, scene_name):
-        ppath = self.dataset_path / "data" / scene_name / "scans" / "mesh_aligned_0.05.ply"
+        ppath = (
+            self.dataset_path / "data" / scene_name / "scans" / "mesh_aligned_0.05.ply"
+        )
         xyz, _, _, _, rgb = pyminiply.read(str(ppath))
         xyz = torch.tensor(xyz)
         rgb = torch.tensor(rgb)
 
-        with open(self.dataset_path / "data" / scene_name / "scans" / "segments_anno.json", "r") as f:
+        with open(
+            self.dataset_path / "data" / scene_name / "scans" / "segments_anno.json",
+            "r",
+        ) as f:
             a = json.load(f)
         seg_groups = a["segGroups"]
 
@@ -74,7 +85,9 @@ class ScanNetPPDataset:
             frame_names = [frame_names[i] for i in frame_idxs]
         return frame_names, rtk_json
 
-    def get_poses(self, scene_name, frame_idxs: Optional[List[int]] = None) -> List[torch.Tensor]:
+    def get_poses(
+        self, scene_name, frame_idxs: Optional[List[int]] = None
+    ) -> List[torch.Tensor]:
         frame_names, rtk_json = self._load_json(scene_name, frame_idxs)
         poses = []
         for frame_name in frame_names:
@@ -84,7 +97,9 @@ class ScanNetPPDataset:
 
         return torch.stack(poses).float()
 
-    def get_intrinsics(self, scene_name, frame_idxs: Optional[List[int]] = None) -> List[torch.Tensor]:
+    def get_intrinsics(
+        self, scene_name, frame_idxs: Optional[List[int]] = None
+    ) -> List[torch.Tensor]:
         frame_names, rtk_json = self._load_json(scene_name, frame_idxs)
 
         intrinsics = []
@@ -99,7 +114,9 @@ class ScanNetPPDataset:
 
         return torch.stack(intrinsics).float()
 
-    def get_images(self, scene_name, frame_idxs: Optional[List[int]] = None) -> List[torch.Tensor]:
+    def get_images(
+        self, scene_name, frame_idxs: Optional[List[int]] = None
+    ) -> List[torch.Tensor]:
         scene_path = self.dataset_path / "data" / scene_name
         frame_names, _ = self._load_json(scene_name, frame_idxs)
 
@@ -112,7 +129,9 @@ class ScanNetPPDataset:
 
         return torch.stack(images)
 
-    def get_depths(self, scene_name, frame_idxs: Optional[List[int]] = None) -> List[torch.Tensor]:
+    def get_depths(
+        self, scene_name, frame_idxs: Optional[List[int]] = None
+    ) -> List[torch.Tensor]:
         scene_path = self.dataset_path / "data" / scene_name
         frame_names, _ = self._load_json(scene_name, frame_idxs)
 
@@ -123,7 +142,7 @@ class ScanNetPPDataset:
             depth = self.depth_to_tensor(depth).float() * self.DEPTH_SCALE_FACTOR
             depths.append(depth)
 
-        return torch.stack(depths)[:,0]
+        return torch.stack(depths)[:, 0]
 
     def get_camera_views(self, scene_name, frame_idxs: Optional[List[int]] = None):
         return {
