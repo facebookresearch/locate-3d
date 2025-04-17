@@ -56,6 +56,13 @@ def load_state_dict(model, state_dict):
     return model
 
 
+def downsample(pointcloud_dict, limit_points):
+    if len(pointcloud_dict['points']) < limit_points:
+        return pointcloud_dict
+    
+    indices = torch.randperm(len(pointcloud_dict['points']), device=pointcloud_dict['points'].device)[:limit_points]
+    return {k: v[indices] for k,v in pointcloud_dict.items()}
+    
 class Locate3D(
     nn.Module,
     PyTorchModelHubMixin,

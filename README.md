@@ -4,10 +4,8 @@ Official codebase for the `Locate-3D` models, the `3D-JEPA` encoders, and the `L
 
 **[Meta AI Research, FAIR](https://ai.facebook.com/research/)**
 
-[\[Paper\]](arxiv.org) <!-- TODO: Sergio add link once arxiv created -->
-[\[Demo\]](https://locate3d.metademolab.com/)
-[\[Video\]](todo.org) <!-- TODO: Paul add link once created -->
-[\[Blog\]](todo.org) <!-- TODO: Paul add link once created -->
+[\[Paper\]](https://ai.meta.com/research/publications/locate-3d-real-world-object-localization-via-self-supervised-learning-in-3d) 
+[\[Demo\]](https://locate3d.atmeta.com/demo)
 
 ## Locate 3D
 
@@ -36,7 +34,6 @@ predict 3D masks and bounding boxes.
 
 <img src="https://github.com/facebookresearch/locate-3d/blob/main/assets/locate3d-data-vis.png" width=100%>
 
-<!-- TODO: Does ada want image to represent dataset? -->
 Additionally, we introduce Locate 3D Dataset, a new
 dataset for 3D referential grounding, spanning multiple capture setups with over 130K annotations.
 This enables a systematic study of generalization capabilities as well as a stronger model.
@@ -51,18 +48,18 @@ This enables a systematic study of generalization capabilities as well as a stro
   </tr>
   <tr>
 	<th colspan="1">Locate 3D</th>
-	<th colspan="1">600M</th> <!-- TODO: exact number -->
-	<th colspan="1"><a href="https://huggingface.com">Link</a></th>
+	<th colspan="1">600M</th> 
+	<th colspan="1"><a href="https://huggingface.co/facebook/locate-3d">Link</a></th>
   </tr>
   <tr>
 	<th colspan="1">Locate 3D+</th>
-	<th colspan="1">600M</th> <!-- TODO: exact number -->
-	<th colspan="1"><a href="https://huggingface.com">Link</a></th>
+	<th colspan="1">600M</th> 
+	<th colspan="1"><a href="https://huggingface.co/facebook/locate-3d-plus">Link</a></th>
   </tr>
   <tr>
 	<th colspan="1">3D-JEPA</th>
-	<th colspan="1">300M</th> <!-- TODO: exact number -->
-	<th colspan="1"><a href="https://huggingface.com">Link</a></th>
+	<th colspan="1">300M</th> 
+	<th colspan="1"><a href="https://huggingface.co/facebook/3d-jepa">Link</a></th>
   </tr>
 </table>
 
@@ -91,7 +88,7 @@ The majority of `locate-3` is licensed under CC-BY-NC, however portions of the p
 
 ## Citation
 If you find this repository useful in your research, please consider giving a star :star: and a citation
-<!-- TODO: Sergio add once arxiv link is created -->
+
 ```bibtex
 @article{arnaudmcvay2025locate3d,
   title={Locate 3D: Real-World Object Localization via Self-Supervised Learning in 3D},
@@ -99,7 +96,8 @@ If you find this repository useful in your research, please consider giving a st
 Phillip Thomas, Ruslan Partsey, Daniel Dugas, Abha Gejji, Alexander Sax, Vincent-Pierre Berges,
 Mikael Henaff, Ayush Jain, Ang Cao, Ishita Prasad, Mrinal Kalakrishnan, Michael Rabbat, Nicolas
 Ballas, Mido Assran, Oleksandr Maksymets, Aravind Rajeswaran, Franziska Meier},
-  journal={arXiv:2404.08471},
-  year={2025}
+  journal={arXiv},
+  year={2025},
+  url={https://ai.meta.com/research/publications/locate-3d-real-world-object-localization-via-self-supervised-learning-in-3d}
 }
 ```  

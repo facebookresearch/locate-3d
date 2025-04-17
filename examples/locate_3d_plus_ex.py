@@ -19,6 +19,9 @@ model = Locate3D.from_pretrained("facebook/locate-3d-plus")
 # Run model
 data = dataset[219]
 
+# Downsample pointcloud (optional)
+data['featurized_sensor_pointcloud'] = downsample(data['featurized_sensor_pointcloud'], 30000)
+
 output = model.inference(
     data['featurized_sensor_pointcloud'],
     data['lang_data']['text_caption']
