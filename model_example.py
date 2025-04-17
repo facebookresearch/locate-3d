@@ -160,5 +160,36 @@ for k, v in state_dict.items():
 
 
 torch.save({"model_state_dict": cleaned_state_dict}, "/fsx-cortex-datacache/shared/locate-3d-weights/locate-3d-plus.pt")
+
+#model.load_from_checkpoint("/fsx-cortex/sergioarnaud/accel-cortex-m2f-sergioarnaud/2025-01-23_07-03-42_lam3d_train_jan20-locatex/0/checkpoints/ema_epoch_34.pt")
+state_dict = torch.load("/fsx-cortex/sergioarnaud/accel-cortex-m2f-sergioarnaud/2025-01-23_07-03-42_lam3d_train_jan20-locatex/0/checkpoints/ema_epoch_34.pt")['model_state_dict']
+cleaned_state_dict = {}
+for k, v in state_dict.items():
+    if k.startswith("module."):
+        cleaned_state_dict[k[7:]] = v  # Remove first 7 characters ('module.')
+    else:
+        cleaned_state_dict[k] = v
+
+state_dict = cleaned_state_dict        
+cleaned_state_dict = {}
+for k, v in state_dict.items():
+    k = k.replace("encoder.model.", "encoder.")
+    cleaned_state_dict[k] = v
+
+
+torch.save({"model_state_dict": cleaned_state_dict}, "/fsx-cortex-datacache/shared/locate-3d-weights/locate-3d.pt")
+
+
+
         
-        
+jepa_sd = {}
+for k, v in cleaned_state_dict.items():
+    if "encoder." == k[:8]:
+        jepa_sd[k[8:]] = v
+
+
+torch.save({"target_encoder": jepa_sd}, "/fsx-cortex-datacache/shared/locate-3d-weights/encoder_3djepa_finetuned.pt")
+
+e3djepa = torch.load("/fsx-cortex/pmcvay/jepa/fixintrinsics-clipdino-ptv3-sparsepred-percent8-sn-arkit/jepa-e480.pth.tar")
+
+torch.save({"target_encoder": e3djepa['target_encoder']}, "/fsx-cortex-datacache/shared/locate-3d-weights/encoder_3djepa_pretrained.pt")

@@ -9,10 +9,15 @@ from pytorch3d.renderer.implicit.harmonic_embedding import HarmonicEmbedding
 from models.point_transformer_v3 import PointTransformerV3
 import spconv.pytorch as spconv
 from functools import partial
+from huggingface_hub import PyTorchModelHubMixin
 logger = getLogger()
 
 
-class Encoder3DJEPA(nn.Module):
+class Encoder3DJEPA(
+    nn.Module,
+    PyTorchModelHubMixin,
+    license="cc-by-nc-4.0",
+):
     """Wrapper to use PTv3 3D Transformers."""
 
     def __init__(

@@ -10,6 +10,7 @@ import torch.nn as nn
 from models.encoder_3djepa import Encoder3DJEPA
 from models.locate_3d_decoder import Locate3DDecoder
 
+from huggingface_hub import PyTorchModelHubMixin
 
 def get_text_from_token_indices(tokenizer, text, indices):
     """
@@ -55,7 +56,11 @@ def load_state_dict(model, state_dict):
     return model
 
 
-class Locate3D(nn.Module):
+class Locate3D(
+    nn.Module,
+    PyTorchModelHubMixin,
+    license="cc-by-nc-4.0",
+):
 
     def __init__(self, cfg):
         """
@@ -72,11 +77,11 @@ class Locate3D(nn.Module):
 
     def __init_encoder(self):
         """Initialize and return the encoder module."""
-        return Encoder3DJEPA(**self.cfg.encoder).cuda()
+        return Encoder3DJEPA(**self.cfg['encoder']).cuda()
 
     def __init_decoder(self):
         """Initialize and return the decoder module."""
-        return Locate3DDecoder(**self.cfg.decoder).cuda()
+        return Locate3DDecoder(**self.cfg['decoder']).cuda()
 
     def train(self, mode: bool = True):
         """Set the model to training mode."""
