@@ -56,9 +56,9 @@ def test_model_on_arkitscenes_scene():
     dataset = Locate3DDataset(
         annotations_fpath = 'locate3d_data/dataset/val_arkitscenes.json',
         return_featurized_pointcloud = True,
-        scannet_data_dir = '/fsx-cortex/shared/datasets/scannet_ac',
-        scannetpp_data_dir = '/datasets01/scannetpp/07252024',
-        arkitscenes_data_dir = '/datasets01/ARKitScenes/',
+        scannet_data_dir = '[scannet_dir]',
+        scannetpp_data_dir = '[scannetpp_dir]',
+        arkitscenes_data_dir = '[arkit_dir]',
     )
 
     data = dataset[277]
