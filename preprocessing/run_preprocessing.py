@@ -26,7 +26,6 @@ def preprocess_scenes(args, start_idx, end_idx):
 
     
     l3dd = Locate3DDataset(
-        return_featurized_pointcloud=True,
         annotations_fpath = args.l3dd_annotations_fpath,
         return_featurized_pointcloud = False,
         scannet_data_dir = args.scannet_data_dir,
