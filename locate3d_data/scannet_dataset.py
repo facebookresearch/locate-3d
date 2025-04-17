@@ -64,10 +64,10 @@ class ScanNetDataset:
 
         # Align
         axis_align_mat = torch.from_numpy(
-            np.load(self.instance_dir / f"{scan_name}_axis_align_matrix.npy")
+            np.load(self.instance_dir / f"{scene_id}_axis_align_matrix.npy")
         ).float()
 
-        xyz = self.align_ptc_to_camera(xyz, axis_align_matrix)
+        xyz = self.align_ptc_to_camera(xyz, axis_align_mat)
         
         return xyz, rgb, seg, id_to_label
 

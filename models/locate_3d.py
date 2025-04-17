@@ -51,13 +51,7 @@ def load_state_dict(model, state_dict):
         else:
             cleaned_state_dict[k] = v
 
-    model_dict = model.state_dict()
-    # Filter out unexpected keys
-    filtered_dict = {k: v for k, v in cleaned_state_dict.items() if k in model_dict}
-    # Update model state dict
-    model_dict.update(filtered_dict)
-    # Load the filtered state dict
-    model.load_state_dict(model_dict, strict=False)
+    model.load_state_dict(cleaned_state_dict, strict=True)
     return model
 
 

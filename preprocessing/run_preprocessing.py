@@ -10,6 +10,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 import torch
 from omegaconf import OmegaConf
+from pathlib import Path
 
 from preprocessing.pointcloud_featurizer import FeatureLifter3D
 from locate3d_data.locate3d_dataset import Locate3DDataset
@@ -18,8 +19,15 @@ def main(args, start_idx, end_idx):
 
     cache_path = args.cache_path
 
+    # Create folders
+    (Path(cache_path) / "ScanNet").mkdir(parents=True, exist_ok=True)
+    (Path(cache_path) / "ScanNet++").mkdir(parents=True, exist_ok=True)
+    (Path(cache_path) / "ARKitScenes").mkdir(parents=True, exist_ok=True)
+
+    
     l3dd = Locate3DDataset(
         annotations_fpath = args.l3dd_annotations_fpath,
+        return_featurized_pointcloud = False,
         scannet_data_dir = args.scannet_data_dir,
         scannetpp_data_dir = args.scannetpp_data_dir,
         arkitscenes_data_dir = args.arkitscenes_data_dir,

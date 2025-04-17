@@ -8,6 +8,7 @@ from pytorch3d.renderer.implicit.harmonic_embedding import HarmonicEmbedding
 
 from models.point_transformer_v3 import PointTransformerV3
 import spconv.pytorch as spconv
+from functools import partial
 logger = getLogger()
 
 
@@ -26,6 +27,7 @@ class Encoder3DJEPA(nn.Module):
         self.voxel_size = voxel_size
         self.input_feat_dim = input_feat_dim
         self.embed_dim = embed_dim
+        norm_layer = partial(nn.LayerNorm, eps=1e-6)
         
         super().__init__()
         self.zero_token = nn.Parameter(torch.zeros(input_feat_dim))
@@ -33,21 +35,21 @@ class Encoder3DJEPA(nn.Module):
         self.rgb_harmonic_embed = HarmonicEmbedding(
             n_harmonic_functions=num_rgb_harmonic_functions
         )
-        self.rgb_harmonic_norm = nn.LayerNorm(
+        self.rgb_harmonic_norm = norm_layer(
             3 * 2 * num_rgb_harmonic_functions + 3
         )
 
         self.rgb_projector = nn.Sequential(
             nn.Linear(3 * 2 * num_rgb_harmonic_functions + 3, rgb_proj_dim),
             nn.GELU(),
-            nn.LayerNorm(rgb_proj_dim),
+            norm_layer(rgb_proj_dim),
         )
 
         self.feature_embed = nn.Linear(input_feat_dim + rgb_proj_dim, embed_dim)
 
-        self.feat_norm = nn.LayerNorm(input_feat_dim)
+        self.feat_norm = norm_layer(input_feat_dim)
 
-        self.transformer_input_norm = nn.LayerNorm(embed_dim)
+        self.transformer_input_norm = norm_layer(embed_dim)
         
         self.point_transformer_v3 = PointTransformerV3(**ptv3_args)
         self.num_features = self.point_transformer_v3.out_dim

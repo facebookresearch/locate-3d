@@ -183,7 +183,7 @@ class Locate3DDataset:
             frames_used = anno['frames_used']
             cache_file = os.path.join(self.cache_path, scene_dataset, f"{scene_name}_start{frames_used[0]}_end{frames_used[-1]}.pt")
         else:
-            cache_file = os.path.join(self.cache_path, scene_dataset, f"{scene_id}.pt")
+            cache_file = os.path.join(self.cache_path, scene_dataset, f"{scene_name}.pt")
 
         assert os.path.exists(cache_file), "Must first run preprocessing to load featurized pointcloud"
 
