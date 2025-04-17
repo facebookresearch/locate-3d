@@ -15,7 +15,7 @@ from pathlib import Path
 from preprocessing.pointcloud_featurizer import FeatureLifter3D
 from locate3d_data.locate3d_dataset import Locate3DDataset
 
-def main(args, start_idx, end_idx):
+def preprocess_scenes(args, start_idx, end_idx):
 
     cache_path = args.cache_path
 
@@ -26,12 +26,12 @@ def main(args, start_idx, end_idx):
 
     
     l3dd = Locate3DDataset(
+        return_featurized_pointcloud=True,
         annotations_fpath = args.l3dd_annotations_fpath,
         return_featurized_pointcloud = False,
         scannet_data_dir = args.scannet_data_dir,
         scannetpp_data_dir = args.scannetpp_data_dir,
         arkitscenes_data_dir = args.arkitscenes_data_dir,
-
     )
     scene_list = sorted(l3dd.list_scenes())
     
@@ -128,4 +128,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args, start_idx=args.start, end_idx=args.end)
+    preprocess_scenes(args, start_idx=args.start, end_idx=args.end)

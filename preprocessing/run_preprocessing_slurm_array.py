@@ -1,6 +1,7 @@
 """
 This is an example script to demonstrate parallelizing data preprocessing
-by using SLURM array jobs.
+by using SLURM array jobs. Users will need to adapt the script to their
+specific use case and SLURM cluster configuration.
 """
 
 import argparse
@@ -14,64 +15,18 @@ import torch
 from omegaconf import OmegaConf
 
 
-def main(args, start_idx, end_idx):
+def jobarray_entrypoint(args, start_idx, end_idx):
 
+    # These imports need to be inside the main function to avoid issues 
+    # with SLURM array jobs
     from preprocessing.pointcloud_featurizer import FeatureLifter3D
     from locate3d_data.locate3d_dataset import Locate3DDataset
 
-    cache_path = args.cache_path
+    # Import the preprocessing function
+    from preprocessing.run_preprocessing import preprocess_scenes
 
-    l3dd = Locate3DDataset(
-        annotations_fpath = args.l3dd_annotations_fpath,
-        scannet_data_dir = args.scannet_data_dir,
-        scannetpp_data_dir = args.scannetpp_data_dir,
-        arkitscenes_data_dir = args.arkitscenes_data_dir,
-
-    )
-    scene_list = sorted(l3dd.list_scenes())
-    
-    pointcloud_featurizer_clip_cfg = OmegaConf.load(os.path.join(SCRIPT_DIR, "config/clip.yaml"))
-    pointcloud_featurizer_clip = FeatureLifter3D(pointcloud_featurizer_clip_cfg)
-    pointcloud_featurizer_dino_cfg = OmegaConf.load(os.path.join(SCRIPT_DIR, "config/dino.yaml"))
-    pointcloud_featurizer_dino = FeatureLifter3D(pointcloud_featurizer_dino_cfg)
-
-    # Iterate through the dataset and cache the featurized pointclouds
-    for idx in range(start_idx, end_idx):
-        # Load a sample from the dataset
-        scene_dataset = scene_list[idx][0]
-        scene_id = scene_list[idx][1]
-        frames_used = scene_list[idx][2]
-        
-        # Early skip if the scene is already cached
-        if frames_used is None:
-            cache_file = os.path.join(cache_path, scene_dataset, f"{scene_id}.pt")
-        else:
-            cache_file = os.path.join(cache_path, scene_dataset, f"{scene_id}_start{frames_used[0]}_end{frames_used[-1]}.pt")
-        if os.path.exists(cache_file):
-            print(f"Cache file already exists: {cache_file}")
-            print(f"Skipping cache creation for scene {scene_id}")
-            continue
-
-        print(f"Processing scene {scene_id} ...")
-        camera_views = l3dd.get_camera_views(*scene_list[idx])
-
-        # Build CLIP featurized pointcloud
-        clip_pcd = pointcloud_featurizer_clip.lift_frames(camera_views)
-        torch.manual_seed(0) # seed the RNG so that the pointclouds are the same
-        dino_pcd = pointcloud_featurizer_dino.lift_frames(camera_views)
-
-        # Creating output dictionary
-        output_dict = {
-            "points": dino_pcd["points_reduced"],
-            "rgb": dino_pcd["rgb_reduced"],
-            "features_clip": clip_pcd["features_reduced"],
-            "features_dino": dino_pcd["features_reduced"],
-        }
-
-        # Save the output dictionary to the cache file
-        if not os.path.exists(cache_file):
-            torch.save(output_dict, cache_file)
-            print(f"Saved cache file: {cache_file}")
+    # Run the preprocessing function
+    preprocess_scenes(args, start_idx, end_idx)
 
 
 if __name__ == "__main__":
@@ -99,6 +54,7 @@ if __name__ == "__main__":
         type=str,
         help="Path to store preprocess cache data",
         default='cache',
+        required=True,
     )
     parser.add_argument(
         "--scannet_data_dir",
@@ -117,18 +73,6 @@ if __name__ == "__main__":
         type=str,
         help="Path to the scannet dataset directory",
         default=None,
-    )
-    parser.add_argument(
-        "--start",
-        type=int,
-        help="Index of first scene to cache",
-        default=0,
-    )
-    parser.add_argument(
-        "--end",
-        type=int,
-        help="Index of last scene to cache",
-        default=-1,
     )
     parser.add_argument(
         "--slurm_account",
@@ -151,48 +95,19 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    NUM_SCENES = 0
-    NUM_SNPP_TRAIN = 6321
-    NUM_SNPP_VAL = 1341
-    NUM_SN_TRAIN = 1201
-    NUM_SN_VAL = 314
-    NUM_ARKIT_TRAIN = 4498
-    NUM_ARKIT_VAL = 549
+    # Number of scenes to cache
+    # This is a placeholder value. You should set this to the actual number of scenes you want to cache.
+    NUM_SCENES = 10
 
-    if args.l3dd_annotations_fpath == 'locate3d_data/dataset/all.json':
-        NUM_SCENES = NUM_SNPP_TRAIN + NUM_SNPP_VAL + NUM_ARKIT_TRAIN + NUM_ARKIT_VAL
-    elif args.l3dd_annotations_fpath == 'locate3d_data/dataset/train_scannet.json':
-        NUM_SCENES = NUM_SN_TRAIN
-    elif args.l3dd_annotations_fpath == 'locate3d_data/dataset/val_arkitscenes.json':
-        NUM_SCENES = NUM_ARKIT_VAL
-    elif args.l3dd_annotations_fpath == 'locate3d_data/dataset/train.json':
-        NUM_SCENES = NUM_SN_TRAIN + NUM_ARKIT_TRAIN
-    elif args.l3dd_annotations_fpath == 'locate3d_data/dataset/train_scannetpp.json':
-        NUM_SCENES = NUM_SNPP_TRAIN
-    elif args.l3dd_annotations_fpath == 'locate3d_data/dataset/val_scannet.json':
-        NUM_SCENES = NUM_SN_VAL
-    elif args.l3dd_annotations_fpath == 'locate3d_data/dataset/train_arkitscenes.json':
-        NUM_SCENES = NUM_ARKIT_TRAIN
-    elif args.l3dd_annotations_fpath == 'locate3d_data/dataset/val.json':
-        NUM_SCENES = NUM_SN_VAL + NUM_ARKIT_VAL
-    elif args.l3dd_annotations_fpath == 'locate3d_data/dataset/val_scannetpp.json':
-        NUM_SCENES = NUM_SNPP_VAL
-    else:
-        raise ValueError("Invalid annotations file path")
-    
-    # Time in minutes we have by when we need all scenes cached
-    TOTAL_TIME_MINUTES = 6 * 60
-    # Time to cache one scene in minutes (20-30 minutes is a reasonable estimate if building everything from scratch)
-    TIME_PER_SCENE_MINUTES = 20
-
-    # Number of jobs that we need to run in parallel to cache all scenes in time
-    NUM_JOBS = int(NUM_SCENES * TIME_PER_SCENE_MINUTES / TOTAL_TIME_MINUTES)
+    # Number of jobs that we'd like to run
+    NUM_JOBS = 10
 
     # Number of scenes to cache per job
     SCENES_PER_JOB = int(NUM_SCENES // NUM_JOBS)
 
     # Time to request per job in HH:MM:SS format
-    TIME_PER_JOB = f"{int(math.ceil(SCENES_PER_JOB * TIME_PER_SCENE_MINUTES / 60))}:00:00"
+    # This is a placeholder value. You should set this to the actual time you expect each job to take.
+    TIME_PER_JOB = f"06:00:00"
 
     # Start and end indices for each job
     start_inds = list(range(0, NUM_SCENES, SCENES_PER_JOB))
@@ -203,7 +118,7 @@ if __name__ == "__main__":
     print(f"Total number of jobs: {len(start_inds)}. (Suggested: {NUM_JOBS})")
     print(f"Time per job: {TIME_PER_JOB}")
 
-    print(f"Submitting {len(start_inds)} jobs to cache {NUM_SCENES} {args.dataset_} scenes...")
+    print(f"Submitting {len(start_inds)} jobs to cache {NUM_SCENES} scenes...")
     keypress = input("Press any key to continue or 'q' to cancel.")
     if keypress == "q":
         quit()
@@ -223,4 +138,4 @@ if __name__ == "__main__":
         cpus_per_task=12,
         slurm_array_parallelism=len(start_inds),
     )
-    jobs = executor.map_array(main, [args for _ in range(len(start_inds))], start_inds, end_inds)
+    jobs = executor.map_array(jobarray_entrypoint, [args for _ in range(len(start_inds))], start_inds, end_inds)
