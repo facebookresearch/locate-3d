@@ -165,8 +165,8 @@ class ARKitScenesDataset:
         )
 
         return {
-            "cam_to_world": poses,
-            "cam_K": intrinsics,
-            "rgb" : images,
-            "depth_zbuffer": depths,
+            "cam_to_world": poses.float(),
+            "cam_K": intrinsics.float(),
+            "rgb" : images.float(),
+            "depth_zbuffer": depths.float(),
         }
