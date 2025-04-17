@@ -76,8 +76,6 @@ This enables a systematic study of generalization capabilities as well as a stro
 
 ```
 
-## Running Locate 3D
-
 ## License
 
 ### Data
