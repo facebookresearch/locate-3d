@@ -1,0 +1,43 @@
+name: locate-3d
+channels:
+  - conda-forge
+  - pyg
+  - defaults
+  - nvidia
+  - pytorch3d
+  - pytorch
+dependencies:
+  - python=3.10
+  - pytest
+  - pillow
+  - numpy=1.26.4
+  - jsonschema
+  - matplotlib
+  - scikit-learn
+  - pandas=2.2.3
+  - ipython
+  - pytest
+  - jupyterlab
+  - natsort
+  - opencv
+  - plotly
+  - omegaconf
+  - hydra-core
+  - pytorch3d=0.7.8=py310_cu121_pyt231
+  - pytorch-cluster=1.6.3=py310_torch_2.3.0_cu121
+  - pip:
+      - torch==2.3.1
+      - torchvision==0.18.1
+      - --index-url https://download.pytorch.org/whl/cu121
+  - pip:
+      - torch-geometric
+      - pyminiply
+      - open3d
+      - git+https://github.com/facebookresearch/pytorch3d.git
+      - git+https://github.com/facebookresearch/segment-anything.git
+      - git+https://github.com/openai/CLIP.git
+      - torch-scatter==2.1.2 -f https://data.pyg.org/whl/torch-2.3.1+cu121.html
+      - spconv-cu120
+      - timm
+      - transformers==4.52.3
+      - flash-attn

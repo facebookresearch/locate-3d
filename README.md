@@ -7,6 +7,9 @@ Official codebase for the `Locate-3D` models, the `3D-JEPA` encoders, and the `L
 [\[Paper\]](https://arxiv.org/pdf/2504.14151)
 [\[Demo\]](https://locate3d.atmeta.com/demo)
 
+## Setup
+To set up an environment for this repo, simply run `conda env create -f environment.yml`. If you run into package issues with `environment.yml`, you can try using `environment_frozen.yml` instead, which contains a list of known good package versions. Then, you can check out the scripts and notebook in the `examples` folder. Note that you must produce a cache for a particular scene before you can use it as an input to the Locate 3D model. Instructions for doing so are located in `preprocessing/README.md`. 
+
 ## Locate 3D
 
 <img src="https://github.com/facebookresearch/locate-3d/blob/main/assets/teaser_v013.png" width=100%>
